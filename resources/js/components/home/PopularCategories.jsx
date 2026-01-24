@@ -1,5 +1,5 @@
 // PopularCategories.jsx
-import React from "react";
+import React, { useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 
@@ -7,45 +7,13 @@ import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 
-const categories = [
-  {
-    title: "Amalienborg Palace",
-    imageText: "AMALIENBORG PALACE",
-    imgSrc: "/categories/1.svg", // replace with real paths
-  },
-  {
-    title: "Christiansborg Palace",
-    imageText: "CHRISTIANSBORG PALACE",
-    imgSrc: "/categories/2.svg",
-  },
-  {
-    title: "Nyhavn",
-    imageText: "NYHAVN",
-    imgSrc: "/categories/3.svg",
-  },
-  {
-    title: "Figurine",
-    imageText: "figurine",
-    imgSrc: "/categories/4.svg",
-  },
-  {
-    title: "Keyring",
-    imageText: "Keyring",
-    imgSrc: "/categories/5.svg",
-  },
-  {
-    title: "Dyhavn",
-    imageText: "dyhavn",
-    imgSrc: "/categories/6.svg",
-  },
-  {
-    title: "Scandinavia",
-    imageText: "Scandinavia",
-    imgSrc: "/categories/7.svg",
-  },
-];
+export default function PopularCategories({categories}) {
+  const [imageErrors, setImageErrors] = useState({});
 
-export default function PopularCategories() {
+  const handleImageError = (id) => {
+    setImageErrors(prev => ({ ...prev, [id]: true }));
+  };
+
   return (
     <section className="py-10 md:py-16 bg-gray">
       <div className="container px-4 sm:px-6 lg:px-8">
@@ -55,9 +23,9 @@ export default function PopularCategories() {
             POPULAR CATEGORIES
           </h2>
 
-          <button className="bg-red text-white px-6 py-2.5 rounded-full text-sm md:text-base font-medium hover:bg-red-800 transition-colors duration-300">
+          {/* <button className="bg-red text-white px-6 py-2.5 rounded-full text-sm md:text-base font-medium hover:bg-red-800 transition-colors duration-300">
             View All
-          </button>
+          </button> */}
         </div>
 
         {/* Slider */}
@@ -96,16 +64,23 @@ export default function PopularCategories() {
             {categories.map((item, index) => (
               <SwiperSlide key={index}>
                 <div className="group cursor-pointer">
-                  <div className="aspect-square overflow-hidden rounded-xl   bg-white shadow-sm hover:shadow-md transition-all duration-300">
-                    <img
-                      src={item.imgSrc}
-                      alt={item.title}
-                      className="w-47 h-full object-contain scale-50 group-hover:scale-75 transition-transform duration-500"
-                    />
+                  <div className="aspect-square overflow-hidden rounded-xl bg-white shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center">
+                    {item.image && !imageErrors[item.id] ? (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        onError={() => handleImageError(item.id)}
+                        className="w-47 h-full object-contain scale-50 group-hover:scale-75 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-100 animate-pulse flex items-center justify-center">
+                         <div className="w-12 h-12 bg-gray-200 rounded-full opacity-30" />
+                      </div>
+                    )}
                   </div>
 
                   <p className="mt-3 text-center text-sm md:text-base font-medium text-gray-700 group-hover:text-red transition-colors">
-                    {item.imageText}
+                    {item.name}
                   </p>
                 </div>
               </SwiperSlide>

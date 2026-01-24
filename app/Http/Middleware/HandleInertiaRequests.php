@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Category;
 use App\Models\FooterInfo;
 use App\Models\FooterSocial;
 use App\Models\GeneralSetting;
@@ -69,7 +70,7 @@ class HandleInertiaRequests extends Middleware
                 ->map(function ($item) {
                     return $item->only(['icon', 'icon_extra', 'name', 'url', 'serial_no']);
                 }),
-            'categoriess' => \App\Models\Category::active()->frontShow()
+            'categoriess' => Category::active()->frontShow()
                 ->with([
                     'subCategories' => function($q) {
                         $q->active()->with(['childCategories' => function($q) {

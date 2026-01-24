@@ -9,20 +9,8 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/autoplay";
 
-// const slides = [
- 
-//   {
-//     type: "banner",
-//     image: "/hero-banner.png",
-//   },
-//   {
-//     type: "banner",
-//     image: "/hero-banner.png",
-//   },
-// ];
 
 const HeroSlider = ({sliders}) => {
-  console.log(sliders);
   return (
     <div className="relative w-full overflow-hidden">
       {/* হাইট রেসপন্সিভ করা হয়েছে */}

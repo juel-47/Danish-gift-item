@@ -3,9 +3,10 @@ import React from "react";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { BsTiktok, BsTwitter, BsYoutube } from "react-icons/bs";
 import { FaFacebook } from "react-icons/fa"; 
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 
 export default function Footer() {
+  const { logos } = usePage().props;
 
   const categories = [
     {
@@ -110,16 +111,16 @@ export default function Footer() {
               <div className="mt-6">
                 <p className="text-sm mb-3">Follow US</p>
                 <div className="flex gap-4">
-                  <Link to="#" className="hover:text-red-200 transition-colors">
+                  <Link href="#" className="hover:text-red-200 transition-colors">
                     <FaFacebook />
                   </Link>
-                  <Link to="#" className="hover:text-red-200 transition-colors">
+                  <Link href="#" className="hover:text-red-200 transition-colors">
                     <BsTwitter />
                   </Link>
-                  <Link to="#" className="hover:text-red-200 transition-colors">
+                  <Link href="#" className="hover:text-red-200 transition-colors">
                     <BsYoutube />
                   </Link>
-                  <Link to="#" className="hover:text-red-200 transition-colors">
+                  <Link href="#" className="hover:text-red-200 transition-colors">
                     <BsTiktok />
                   </Link>
                 </div>
@@ -131,18 +132,18 @@ export default function Footer() {
               <h4 className="text-lg font-semibold mb-5">Quick Links</h4>
               <ul className="space-y-2.5 text-red-100/90 text-sm">
                 <li>
-                  <Link to="/" className="hover:text-white transition-colors">
+                  <Link href="/" className="hover:text-white transition-colors">
                     Home
                   </Link>
                 </li>
                 <li>
-                  <Link to="/about" className="hover:text-white transition-colors">
+                  <Link href="/about" className="hover:text-white transition-colors">
                     About
                   </Link>
                 </li>
                 <li>
                   <Link
-                    to="/products"
+                    href="/products"
                     className="hover:text-white transition-colors"
                   >
                     Shop
@@ -150,7 +151,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link
-                    to="/campaigns"
+                    href="/campaigns"
                     className="hover:text-white transition-colors"
                   >
                     Campaigns
@@ -163,7 +164,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link
-                    to="/contacts"
+                    href="/contacts"
                     className="hover:text-white transition-colors"
                   >
                     Contact
@@ -190,10 +191,10 @@ export default function Footer() {
             <div>
               <h4 className="text-lg font-semibold mb-5">Customer Service</h4>
               <ul className="space-y-2.5 text-red-100/90 text-sm mb-8">
-                {customerPages.map((page) => (
-                  <li>
+                {customerPages.map((page, index) => (
+                  <li key={index}>
                     <Link
-                      to={page.url}
+                      href={page.url}
                       className="hover:text-white transition-colors"
                     >
                       {page.title}
@@ -210,10 +211,9 @@ export default function Footer() {
 
             {/* Main content */}
             <div className="w-50 h-[60] items-center gap-3 md:gap-4 shrink-0     px-4 py-2">
-              {/* COPENHAGEN - big uppercase */}
               <img
-                src="/logo.png"
-                alt="sdf"
+                src={logos?.logo || "/logo.png"}
+                alt="Logo"
                 className="w-full h-full object-center"
               />
             </div>
@@ -237,7 +237,7 @@ export default function Footer() {
               </h4>
             </div>
             <div className="flex justify-center md:justify-end">
-              <Link to="https://inoodex.com/">
+              <Link href="https://inoodex.com/">
                 <h3>Develope By Inoodex</h3>
               </Link>
             </div>

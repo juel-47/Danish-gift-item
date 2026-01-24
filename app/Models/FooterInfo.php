@@ -14,6 +14,15 @@ class FooterInfo extends Model
         'address',
         'copyright'
     ];
+
+    public function getLogoAttribute($value)
+    {
+        if ($value && !str_starts_with($value, 'http') && !str_starts_with($value, 'storage/')) {
+            return 'storage/' . $value;
+        }
+        return $value;
+    }
+
     protected static function booted()
     {
         $refreshCache = function () {

@@ -1,10 +1,8 @@
 // FeaturedProducts.jsx
-import React from "react";
-import { products } from "../../data/data";
 import ProductCard from "../ProductCard";
 
  
-export default function FeaturedProducts() {
+export default function FeaturedProducts({products}) {
   return (
     <section className="py-10 md:py-16 bg-gray">
       <div className="container px-4 sm:px-6 lg:px-8">

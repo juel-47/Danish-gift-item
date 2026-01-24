@@ -1,6 +1,7 @@
 // components/Breadcrumb.jsx
+import { Link } from "@inertiajs/react";
 import React from "react";
-import { Link, useLocation } from "react-router"; // if using react-router
+// import { Link, useLocation } from "react-router"; // if using react-router
 // If you're NOT using react-router, you can use <a> tags instead
 
 const Breadcrumb = ({ customItems = [] }) => {

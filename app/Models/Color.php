@@ -11,4 +11,9 @@ class Color extends Model
     {
         return $this->belongsToMany(Product::class, 'product_colors');
     }
+    public function scopeActive($query)
+    {
+        return $query->where('status', 1);
+    }
+    
 }

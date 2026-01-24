@@ -199,18 +199,51 @@ class FrontendController extends Controller
         $cacheKey = "product_details_" . $slug;
         Cache::forget($cacheKey); // Clear product detail cache
 
-        $product = Cache::remember($cacheKey, 1800, function () use ($slug) {
-            return Product::with([
-                'category:id,name,slug,image,icon',
-                'productImageGalleries:id,image,product_id,color_id',
-                'productImageGalleries.color:id,color_name,color_code',
-                'customization',
-                'colors:id,color_name,color_code,price,is_default',
-                'sizes:id,size_name,price,is_default',
-                'brand:id,name,slug,logo'
-            ])->where('slug', $slug)->active()->firstOrFail();
-        });
+         $product = Cache::remember($cacheKey, 1800, function () use ($slug) {
 
+            return Product::query()
+                ->select([
+                    'id',
+                    'name',
+                    'slug',
+                    'price',
+                    'offer_price',
+                    'short_description',
+                    'qty',
+                    'category_id',
+                    'thumb_image',
+                    'long_description',
+                ])
+                ->active()
+                ->where('slug', $slug)
+                ->whereHas('category', function ($q) {
+                    $q->where('status', 1);
+                })
+
+                /*RELATIONS (OPTIMIZED) */
+
+                ->with([
+                    // Category (ONLY name)
+                    'category:id,name',
+
+                    // Product Images + Color
+                    'productImageGalleries:id,image,product_id,color_id',
+                    'productImageGalleries.color:id,color_name,color_code',
+
+                    // Sizes (ONLY name, no pivot)
+                    'sizes' => fn($q) => $q->active()->select('sizes.id', 'size_name'),
+                    // 'colors:id,color_name,color_code',
+
+                    // Customization (ONLY is_customizable)
+                    'customization:id,product_id,is_customizable',
+                ])
+
+                /* review */
+                // ->withCount('reviews')
+                ->withAvg('reviews', 'rating')
+
+                ->firstOrFail();
+        });
         $reviews = ProductReview::with(['user:id,name,email,image'])
             ->where('product_id', $product->id)
             ->where('status', 1)
@@ -227,10 +260,7 @@ class FrontendController extends Controller
                 ]
             ]);
 
-        return Inertia::render('ProductDetails', [
-            'product' => $product,
-            'reviews' => $reviews
-        ]);
+        return Inertia::render('ProductDetails', ['product' => $product, 'reviews' => $reviews]);
     }
 
     // Product Search

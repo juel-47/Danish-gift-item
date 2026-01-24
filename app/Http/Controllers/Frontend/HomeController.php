@@ -47,10 +47,10 @@ class HomeController extends Controller
         return $categories;
     }
 
-    private function homeProducts()
+     private function homeProducts()
     {
-        return Category::where(['front_show' => 1, 'status' => 1])
-            ->select('id', 'name', 'slug', 'icon', 'image')
+        return Category::active()->frontshow()
+            ->select('id', 'name', 'slug')
             ->orderBy('id', 'asc')
             ->with(['products' => function ($q) {
                 $q->active()
@@ -59,19 +59,16 @@ class HomeController extends Controller
                         'name',
                         'slug',
                         'category_id',
+                        'thumb_image',
                         'price',
                         'offer_price',
-                        'img_alt_text',
-                        'qty',
-                        'thumb_image'
+                        'qty'
                     )
-                    ->with([
-                        'productImageGalleries:id,product_id,image',
-                        'colors:id,color_name,color_code,price,is_default',
-                        'sizes:id,size_name,price,is_default'
+                    ->withCount([
+                        'colors' => fn($q) => $q->active(),
+                        'sizes' => fn($q) => $q->active(),
                     ])
-                    ->withCount('reviews')
-                    ->withAvg('reviews', 'rating')
+
                     ->orderByDesc('id')
                     ->limit(12);
             }])
@@ -86,27 +83,26 @@ class HomeController extends Controller
             $result[$type] = Product::active()
                 ->where('product_type', $type)
                 ->where('is_approved', 1)
+                ->whereHas('category', function ($q) {
+                    $q->where('status', 1);
+                })
                 ->select(
                     'id',
                     'name',
                     'slug',
                     'category_id',
+                    'thumb_image',
                     'price',
                     'offer_price',
-                    'img_alt_text',
-                    'qty',
-                    'thumb_image'
+                    'qty'
                 )
-                ->with([
-                    'category:id,name,slug',
-                    'colors:id,color_name,color_code,price,is_default',
-                    'sizes:id,size_name,price,is_default',
-                    'productImageGalleries:id,product_id,image'
+                ->withCount([
+                    'colors' => fn($q) => $q->active(),
+                    'sizes' => fn($q) => $q->active(),
                 ])
-                ->withCount('reviews')
-                ->withAvg('reviews', 'rating')
+
                 ->orderByDesc('id')
-                ->limit(12)
+                ->limit(6)
                 ->get();
         }
 
