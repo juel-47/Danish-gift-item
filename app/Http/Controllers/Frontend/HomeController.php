@@ -20,7 +20,6 @@ class HomeController extends Controller
                 ->select('id', 'banner', 'title', 'btn_url', 'type')
                 ->get(['id', 'banner', 'title', 'btn_url', 'type']);
         });
-        $slider = Slider::all();
         $categories = $this->categories();
 
         // dd($categories);

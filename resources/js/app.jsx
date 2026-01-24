@@ -23,69 +23,52 @@
 //     },
 // });
 
+import "./bootstrap";
+import "../css/app.css";
 
+import { createInertiaApp } from "@inertiajs/react";
+import { createRoot } from "react-dom/client";
 
-// import "./bootstrap";
-// import "../css/app.css";
+import Layout from "./pages/Layout";
 
-// import { createInertiaApp } from "@inertiajs/react";
-// import { createRoot } from "react-dom/client";
+createInertiaApp({
+    resolve: (name) => {
+        const pages = import.meta.glob("./pages/**/*.jsx", { eager: true });
+        let page = pages[`./pages/${name}.jsx`];
 
-// import Layout from "./components/Layout/Layout";
+        // ✅ Layout wrapper (unchanged)
+        page.default.layout =
+            page.default.layout ||
+            ((pageElement, pageProps) => (
+                <Layout {...pageProps}>{pageElement}</Layout>
+            ));
 
-// // ✅ react-toastify imports
-// import { ToastContainer } from "react-toastify";
-// import "react-toastify/dist/ReactToastify.css";
+        return page;
+    },
 
-// createInertiaApp({
-//     resolve: (name) => {
-//         const pages = import.meta.glob("./pages/**/*.jsx", { eager: true });
-//         let page = pages[`./pages/${name}.jsx`];
-
-//         // ✅ Layout wrapper (unchanged)
-//         page.default.layout =
-//             page.default.layout ||
-//             ((pageElement, pageProps) => (
-//                 <Layout {...pageProps}>{pageElement}</Layout>
-//             ));
-
-//         return page;
-//     },
-
-//     setup({ el, App, props }) {
-//         createRoot(el).render(
-//             <>
-//                 {/* Inertia App */}
-//                 <App {...props} />
-
-//                 {/* ✅ GLOBAL Toast Container (ONLY ONCE) */}
-//                 <ToastContainer
-//                     position="top-right"
-//                     autoClose={2000}
-//                     hideProgressBar
-//                     closeOnClick
-//                     pauseOnHover
-//                     newestOnTop
-//                 />
-//             </>
-//         );
-//     },
-// });
-
+    setup({ el, App, props }) {
+        createRoot(el).render(
+            <>
+                {/* Inertia App */}
+                <App {...props} />
+            </>,
+        );
+    },
+});
 
 //only for test
 
-import { createRoot } from 'react-dom/client'
-import { createInertiaApp } from '@inertiajs/react'
+// import { createRoot } from 'react-dom/client'
+// import { createInertiaApp } from '@inertiajs/react'
 
-import './bootstrap'
-import '../css/app.css'
+// import './bootstrap'
+// import '../css/app.css'
 
-createInertiaApp({
-  resolve: async (name) => {
-    return (await import(`./Pages/${name}.jsx`)).default
-  },
-  setup({ el, App, props }) {
-    createRoot(el).render(<App {...props} />)
-  },
-})
+// createInertiaApp({
+//   resolve: async (name) => {
+//     return (await import(`./Pages/${name}.jsx`)).default
+//   },
+//   setup({ el, App, props }) {
+//     createRoot(el).render(<App {...props} />)
+//   },
+// })

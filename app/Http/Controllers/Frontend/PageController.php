@@ -22,11 +22,6 @@ class PageController extends Controller
             'aboutContent' => $about,
         ]);
     }
-    // public function  termsAndCondition()
-    // {
-    //     $termsAndCondition = TermsAndCondition::select('content')->get();
-    //     return response()->json($termsAndCondition);
-    // }
     public function customize()
     {
         return Inertia::render('CustomizePage');
@@ -59,11 +54,6 @@ class PageController extends Controller
         // Send mail
         Mail::to($setting->email)->send(new Contact($mailData));
 
-        // Return API response
-        // return response()->json([
-        //     'status' => 'success',
-        //     'message' => 'Your message has been sent successfully'
-        // ]);
         return redirect()->back()->with('success', 'Your message has been sent successfully');
     }
 

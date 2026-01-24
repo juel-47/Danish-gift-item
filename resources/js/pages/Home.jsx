@@ -1,11 +1,24 @@
-import { usePage } from "@inertiajs/react";
+import HeroSlider from "../components/home/HeroSlider";
+// import PopularCategories from "../components/home/PopularCategories";
+// import FeaturedProducts from "../components/home/FeaturedProducts";
+// import LatestProducts from "../components/home/LatestProducts";
+// import CustomerStories from "../components/home/CustomerStories";
 
-export default function Hello() {
-    const { name } = usePage().props;
+const HomePage = ({sliders}) => {
     return (
-        <div>
-            <h1 className="text-3xl font-bold mx-auto container mt-10 text-red-400">Hello from React + Inertia { name }</h1>
-        </div>
+        <>
+            <HeroSlider sliders={sliders} />
+            <PopularCategories />
+            {/* <FeaturedProducts />
+            <div className="p-0 m-0 w-full bg-gray">
+                <Link to="/products">
+                    <img src="/banner.svg" alt="" className="w-full" />
+                </Link>
+            </div>
+            <LatestProducts /> */}
+            {/* <CustomerStories /> */}
+        </>
     );
+};
 
-}
+export default HomePage;

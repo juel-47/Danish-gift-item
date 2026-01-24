@@ -21,6 +21,14 @@ class Slider extends Model
     {
         return $query->where('status', 1);
     }
+
+    public function getBannerAttribute($value)
+    {
+        if ($value && !str_starts_with($value, 'http') && !str_starts_with($value, 'storage/')) {
+            return 'storage/' . $value;
+        }
+        return $value;
+    }
     protected static function booted()
     {
         static::created(function ($slider) {

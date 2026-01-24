@@ -112,38 +112,6 @@ class FrontendController extends Controller
         Cache::forget($key);
     }
 
-    // All Products (Shop Page)
-    // public function allProducts(Request $request)
-    // {
-    //     $this->clearCache('all_products', $request);
-
-    //     $cacheKey = $this->cacheKey('all_products', $request);
-
-    //     $products = Cache::remember($cacheKey, 1800, function () use ($request) {
-    //         $query = Product::active();
-    //         $query = $this->applyFilters($query, $request);
-
-    //         if (!$request->has('sort_by')) $query->orderBy('id', 'desc');
-
-    //         return $query->with([
-    //             'category:id,name,slug',
-    //             'colors:id,color_name,color_code,price,is_default',
-    //             'sizes:id,size_name,price,is_default',
-    //             'customization',
-    //             'productImageGalleries:id,image,product_id,color_id',
-    //             'productImageGalleries.color:id,color_name,color_code'
-    //         ])
-    //             ->withCount('reviews')
-    //             ->withAvg('reviews', 'rating')
-    //             ->paginate(24)
-    //             ->withQueryString();
-    //     });
-
-    //     return Inertia::render('Shop', [
-    //         'products' => $products,
-    //         'filters' => $request->all()
-    //     ]);
-    // }
     public function allProducts(Request $request)
     {
         $this->clearCache('all_products', $request);

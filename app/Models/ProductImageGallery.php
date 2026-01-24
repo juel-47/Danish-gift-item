@@ -11,6 +11,14 @@ class ProductImageGallery extends Model
         'color_id',
         'image',
     ];
+
+    public function getImageAttribute($value)
+    {
+        if ($value && !str_starts_with($value, 'http') && !str_starts_with($value, 'storage/')) {
+            return 'storage/' . $value;
+        }
+        return $value;
+    }
     public function product()
     {
         return $this->belongsTo(Product::class);

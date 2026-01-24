@@ -24,20 +24,6 @@ class ReviewController extends Controller
             return redirect()->back()->with('error', 'Unauthorized! Please login to submit a review.');
         }
 
-        //if user has already submitted a review for this product
-
-        // $exists = ProductReview::where([
-        //     'user_id'    => $user->id,
-        //     'product_id' => $validated['product_id']
-        // ])->first();
-
-        // if ($exists) {
-        //     return response()->json([
-        //         'status'  => false,
-        //         'message' => 'You have already submitted a review for this product'
-        //     ], 409);
-        // }
-
         ProductReview::create([
             'product_id' => $validated['product_id'],
             'user_id'    => $user->id,

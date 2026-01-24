@@ -83,7 +83,7 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Your account is inactive. Contact support.']);
         }
 
-        // ✅ IMPORTANT: login এর আগের session ধরে রাখো
+        // ✅ IMPORTANT: login session
         $oldSessionId = session()->getId();
 
         // LOGIN
@@ -289,7 +289,7 @@ class AuthController extends Controller
     public function showResend(Request $request)
     {
         // dd($request->all());
-        $email = $request->query('email'); 
+        $email = $request->query('email');
         return Inertia::render('ResendEamil', [
             'email' => $email
         ]);

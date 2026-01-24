@@ -69,6 +69,14 @@ class HandleInertiaRequests extends Middleware
                 ->map(function ($item) {
                     return $item->only(['icon', 'icon_extra', 'name', 'url', 'serial_no']);
                 }),
+            'categoriess' => \App\Models\Category::active()->frontShow()
+                ->with([
+                    'subCategories' => function($q) {
+                        $q->active()->with(['childCategories' => function($q) {
+                            $q->active();
+                        }]);
+                    }
+                ])->get(),
         ];
     }
 }

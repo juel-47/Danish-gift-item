@@ -62,6 +62,14 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function getImageAttribute($value)
+    {
+        if ($value && !str_starts_with($value, 'http') && !str_starts_with($value, 'storage/')) {
+            return 'storage/' . $value;
+        }
+        return $value;
+    }
     /** 
      * Get the role that owns the User
      */

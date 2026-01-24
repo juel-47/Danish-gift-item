@@ -32,6 +32,22 @@ class Category extends Model
     {
         return $query->where('front_show', 1);
     }
+
+    public function getImageAttribute($value)
+    {
+        if ($value && !str_starts_with($value, 'http') && !str_starts_with($value, 'storage/')) {
+            return 'storage/' . $value;
+        }
+        return $value;
+    }
+
+    public function getIconAttribute($value)
+    {
+        if ($value && !str_starts_with($value, 'http') && !str_starts_with($value, 'storage/')) {
+            return 'storage/' . $value;
+        }
+        return $value;
+    }
     public function products()
     {
         return $this->hasMany(Product::class);

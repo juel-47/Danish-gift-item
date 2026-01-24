@@ -11,14 +11,17 @@ use Intervention\Image\ImageManager;
 
 trait ImageUploadTrait
 {
-    // /** handle slider image file */
+    /** handle slider image file */
     public function sliderImage(Request $request, $inputName, $path)
     {
         if ($request->hasFile($inputName)) {
             $image = $request->{$inputName};
             $ext = $image->getClientOriginalExtension();
             $imageName = 'media_' . uniqid() . '.' . $ext;
-            $image->move(public_path($path), $imageName);
+            
+            // Save to storage/app/public/$path
+            $image->storeAs($path, $imageName, 'public');
+            
             return $path . '/' . $imageName;
         }
     }
@@ -35,20 +38,33 @@ trait ImageUploadTrait
             $name_gen = hexdec(uniqid()) . '.' . $image->getClientOriginalExtension();
             $manager = new ImageManager(new Driver());
             $img = $manager->read($image);
-            $img->resize($width, $height)->save($directory . '/' . $name_gen);
-            return $directory . '/' . $name_gen;
+            
+            // Resize and encode
+            $encoded = $img->resize($width, $height)->toJpeg(); // or keep original format if needed
+            
+            $fullPath = $directory . '/' . $name_gen;
+            Storage::disk('public')->put($fullPath, (string) $encoded);
+            
+            return $fullPath;
         }
         return null;
     }
 
     public function deleteImage($path)
     {
-        if (file_exists(public_path($path))) {
-            unlink(public_path($path));
+        if ($path) {
+            // Remove 'storage/' prefix if it's there (from accessor)
+            if (str_starts_with($path, 'storage/')) {
+                $path = substr($path, 8);
+            }
+            
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
         }
     }
 
-    /** mulitple image upload */
+    /** multiple image upload */
     public function uploadMultiImage(Request $request, $inputName, $directory, $width = 400, $height = 500)
     {
         $imagepaths = [];
@@ -58,109 +74,52 @@ trait ImageUploadTrait
                 $name_gen = hexdec(uniqid()) . '.' . $image->getClientOriginalExtension();
                 $manager = new ImageManager(new Driver());
                 $img = $manager->read($image);
-                $img->resize($width, $height)->save($directory . '/' . $name_gen);
-                $imagepaths[] = $directory . '/' . $name_gen;
+                
+                $encoded = $img->resize($width, $height)->toJpeg();
+                $fullPath = $directory . '/' . $name_gen;
+                
+                Storage::disk('public')->put($fullPath, (string) $encoded);
+                $imagepaths[] = $fullPath;
             }
             return $imagepaths;
         }
     }
-    /** update image (handles optional width/height like uploadImage) */
+
+    /** update image */
     public function updateImage($request, $imageField, $directory, $oldImage = null, $width = 400, $height = 500)
     {
         if ($request->file($imageField)) {
-            // delete old image if exists
             if ($oldImage) {
                 $this->deleteImage($oldImage);
             }
 
-            // fallback if null passed
-            $width = $width ?: 400;
-            $height = $height ?: 500;
-
-            // upload and return new image
             return $this->uploadImage($request, $imageField, $directory, $width, $height);
         }
 
-        // return old image if no new file uploaded
         return $oldImage;
     }
 
-    //check of svg/webp/gif 
-    // public function uploadSpecialImage($request, $imageField, $directory, $oldImage = null)
-    // {
-    //     // if ($request->hasFile($imageField)) {
-    //     //     $file = $request->file($imageField);
-    //     //     $extension = strtolower($file->getClientOriginalExtension());
-
-    //     //     // Only allow svg, webp, or gif
-    //     //     if (in_array($extension, ['svg', 'webp', 'gif'])) {
-
-    //     //         // Delete old image if exists
-    //     //         if ($oldImage && file_exists(public_path($oldImage))) {
-    //     //             unlink(public_path($oldImage));
-    //     //         }
-
-    //     //         $name = hexdec(uniqid()) . '.' . $extension;
-    //     //         $file->move(public_path($directory), $name);
-
-    //     //         return $directory . '/' . $name;
-    //     //     }
-    //     // }
-
-    //     // return $oldImage; // Return old image if no new upload
-    //     if ($request->hasFile($imageField)) {
-    //         dd('No file uploaded for ' . $imageField);
-    //         $file = $request->file($imageField);
-    //         $extension = strtolower($file->getClientOriginalExtension());
-
-    //         // অনুমোদিত সব ইমেজ এক্সটেনশন
-    //         $allowed = ['jpg', 'jpeg', 'png', 'webp', 'svg', 'gif', 'ico', 'bmp', 'tiff'];
-
-    //         if (in_array($extension, $allowed)) {
-
-    //             // পুরনো ইমেজ মুছে ফেলো যদি থাকে
-    //             if ($oldImage && file_exists(public_path($oldImage))) {
-    //                 unlink(public_path($oldImage));
-    //             }
-
-    //             $name = hexdec(uniqid()) . '.' . $extension;
-    //             $file->move(public_path($directory), $name);
-
-    //             return $directory . '/' . $name;
-    //         }
-    //     }
-
-    //     return $oldImage; // নতুন আপলোড না থাকলে পুরনো ইমেজই ফেরত দাও
-    // }
+    /** Special image upload (SVG, WebP, GIF, etc.) */
     public function uploadSpecialImage($request, $imageField, $directory, $oldImage = null)
     {
         if ($request->hasFile($imageField)) {
             $file = $request->file($imageField);
-
-            // Get extension from original file name
             $extension = strtolower($file->getClientOriginalExtension());
-
             $allowed = ['jpg', 'jpeg', 'png', 'webp', 'svg', 'gif', 'ico', 'bmp', 'tiff'];
 
             if (!in_array($extension, $allowed)) {
-                // যদি original extension allowed না হয়, force use original extension
-                $extension = pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION);
-                $extension = strtolower($extension);
+                $extension = strtolower(pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION));
                 if (!in_array($extension, $allowed)) {
-                    return $oldImage; // reject file
+                    return $oldImage;
                 }
             }
 
-            if (!file_exists(public_path($directory))) {
-                mkdir(public_path($directory), 0777, true);
-            }
-
-            if ($oldImage && file_exists(public_path($oldImage))) {
-                unlink(public_path($oldImage));
+            if ($oldImage) {
+                $this->deleteImage($oldImage);
             }
 
             $name = hexdec(uniqid()) . '.' . $extension;
-            $file->move(public_path($directory), $name);
+            $file->storeAs($directory, $name, 'public');
 
             return $directory . '/' . $name;
         }
@@ -168,39 +127,19 @@ trait ImageUploadTrait
         return $oldImage;
     }
 
-
-    //normal way handle image 
+    /** Normal way handle image */
     public function upload_image(Request $request, $inputName, $path)
     {
         if ($request->hasFile($inputName)) {
             $image = $request->{$inputName};
             $ext = $image->getClientOriginalExtension();
             $imageName = 'media_' . uniqid() . '.' . $ext;
-            $image->move(public_path($path), $imageName);
+            
+            $image->storeAs($path, $imageName, 'public');
+            
             return $path . '/' . $imageName;
         }
     }
-//     public function upload_image(Request $request, $inputName, $path)
-// {
-// if ($request->hasFile($inputName) && $request->file($inputName)->isValid()) {
-// $image = $request->file($inputName);
-
-//     // ensure folder exists
-//     $fullPath = public_path($path);
-//     if (!file_exists($fullPath)) {
-//         mkdir($fullPath, 0777, true);
-//     }
-
-//     $ext = $image->getClientOriginalExtension();
-//     $imageName = 'media_' . uniqid() . '.' . $ext;
-//     $image->move($fullPath, $imageName);
-
-//     return $path . '/' . $imageName;
-// }
-
-// return null; // return null if no valid file
-
-// }
 
     /** handle multi image file */
     public function upload_multiImage(Request $request, $inputName, $path)
@@ -211,31 +150,36 @@ trait ImageUploadTrait
             foreach ($images as $image) {
                 $ext = $image->getClientOriginalExtension();
                 $imageName = 'media_' . uniqid() . '.' . $ext;
-                $image->move(public_path($path), $imageName);
+                
+                $image->storeAs($path, $imageName, 'public');
                 $imagepaths[] = $path . '/' . $imageName;
             }
             return $imagepaths;
         }
     }
-    /** handle single image update file  */
+
+    /** handle single image update file */
     public function update_image(Request $request, $inputName, $path, $oldPath = null)
     {
         if ($request->hasFile($inputName)) {
-            if (File::exists(public_path($oldPath))) {
-                File::delete(public_path($oldPath));
+            if ($oldPath) {
+                $this->deleteImage($oldPath);
             }
+            
             $image = $request->{$inputName};
             $ext = $image->getClientOriginalExtension();
             $imageName = 'media_' . uniqid() . '.' . $ext;
-            $image->move(public_path($path), $imageName);
+            
+            $image->storeAs($path, $imageName, 'public');
+            
             return $path . '/' . $imageName;
         }
+        return $oldPath;
     }
+
     /** handle delete file */
     public function delete_image(string $path)
     {
-        if (File::exists(public_path($path))) {
-            File::delete(public_path($path));
-        }
+        $this->deleteImage($path);
     }
 }

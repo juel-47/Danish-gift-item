@@ -75,6 +75,14 @@ class Product extends Model
     {
         return $query->where(['status' => 1, 'is_approved' => 1]);
     }
+
+    public function getThumbImageAttribute($value)
+    {
+        if ($value && !str_starts_with($value, 'http') && !str_starts_with($value, 'storage/')) {
+            return 'storage/' . $value;
+        }
+        return $value;
+    }
     public function scopeWithReview($query)
     {
         return $query
