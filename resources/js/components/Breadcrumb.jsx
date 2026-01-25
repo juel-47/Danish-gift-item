@@ -1,28 +1,25 @@
-// components/Breadcrumb.jsx
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import React from "react";
-// import { Link, useLocation } from "react-router"; // if using react-router
-// If you're NOT using react-router, you can use <a> tags instead
 
 const Breadcrumb = ({ customItems = [] }) => {
-  const location = useLocation();
+  const { url } = usePage();
 
   // Default path-based items (you can override with customItems)
   const getDefaultPathItems = () => {
-    const path = location.pathname;
+    const path = url.split('?')[0]; // Get pathname without query string
     if (path === "/" || path === "") return [];
 
     const segments = path.split("/").filter(Boolean);
 
     return segments.map((segment, index) => {
-      const url = "/" + segments.slice(0, index + 1).join("/");
+      const segmentUrl = "/" + segments.slice(0, index + 1).join("/");
       // Optional: make it more human-readable
       const name = segment
         .split("-")
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(" ");
 
-      return { name, url };
+      return { name, url: segmentUrl };
     });
   };
 
@@ -35,8 +32,8 @@ const Breadcrumb = ({ customItems = [] }) => {
       <ol className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
         <li>
           <Link
-            to="/"
-            className="hover:text-[var(--color-red)] transition-colors"
+            href="/"
+            className="hover:text-red transition-colors"
           >
             Home
           </Link>
@@ -51,8 +48,8 @@ const Breadcrumb = ({ customItems = [] }) => {
               </span>
             ) : (
               <Link
-                to={item.url}
-                className="hover:text-[var(--color-red)] transition-colors truncate max-w-[180px]"
+                href={item.url}
+                className="hover:text-red transition-colors truncate max-w-[180px]"
               >
                 {item.name}
               </Link>

@@ -78,6 +78,11 @@ class HandleInertiaRequests extends Middleware
                         }]);
                     }
                 ])->get(),
+            'flash' => [
+                'success' => session('success'),
+                'error' => session('error'),
+            ],
+            'settings' => GeneralSetting::first(),
         ];
     }
 }

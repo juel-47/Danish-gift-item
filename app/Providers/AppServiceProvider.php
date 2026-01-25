@@ -86,10 +86,6 @@ class AppServiceProvider extends ServiceProvider
             $view->with(['settings' => $generalSetting, 'logoSetting' => $logoSetting]);
         });
 
-        Inertia::share([
-            'settings' => function () use ($generalSetting) {
-                return $generalSetting;
-            },
-        ]);
+
     }
 }

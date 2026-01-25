@@ -36,8 +36,26 @@ class CartController extends Controller
 
         $product = Product::with(['sizes', 'colors'])->findOrFail($request->product_id);
 
-        if ($product->qty < $request->qty) {
-            return back()->withErrors(['qty' => 'Requested quantity not available']);
+        /* Stock Check (Cumulative) */
+        $userId = auth('customer')->id();
+        $sessionId = session()->getId();
+        
+        $currentInCart = Cart::where('product_id', $product->id)
+            ->where(function ($q) use ($userId, $sessionId) {
+                $q->when($userId, fn($qq) => $qq->where('user_id', $userId))
+                  ->when(!$userId, fn($qq) => $qq->where('session_id', $sessionId));
+            })
+            ->whereJsonContains('options->size_id', $request->size_id)
+            ->whereJsonContains('options->color_id', $request->color_id)
+            ->sum('quantity');
+
+        if ($product->qty < ($currentInCart + $request->qty)) {
+            $available = max(0, $product->qty - $currentInCart);
+            $msg = $available > 0 
+                ? "You already have $currentInCart in cart. Only $available more available." 
+                : "Product is out of stock or already at maximum available quantity in your cart.";
+                
+            return back()->with('error', $msg);
         }
 
         /* Variant calculation */

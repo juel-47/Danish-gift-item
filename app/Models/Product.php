@@ -86,8 +86,8 @@ class Product extends Model
     public function scopeWithReview($query)
     {
         return $query
-            ->withAvg('reviews', 'rating')
-            ->withCount('reviews')
+            ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
+            ->withCount(['reviews' => fn($q) => $q->where('status', 1)])
             ->with([
                 'category',
                 'colors:id,color_name,color_code,price,is_default',

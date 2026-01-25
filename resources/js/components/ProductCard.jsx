@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 
 const ProductCard = ({product}) => {
+  const { settings } = usePage().props;
   const [imageError, setImageError] = useState(false);
 
   return (
@@ -12,7 +13,7 @@ const ProductCard = ({product}) => {
               `} >
       {/* Product Image */}
       <div className="aspect-square relative bg-gray-100 overflow-hidden flex items-center justify-center">
-        <Link href="/product-details" className="w-full h-full flex items-center justify-center">
+        <Link href={`/product-details/${product.slug}`} className="w-full h-full flex items-center justify-center">
           {product.thumb_image && !imageError ? (
             <img
               src={product.thumb_image.startsWith('http') ? product.thumb_image : (product.thumb_image.startsWith('storage/') ? `/${product.thumb_image}` : `/storage/${product.thumb_image}`)}
@@ -45,15 +46,15 @@ const ProductCard = ({product}) => {
             {product.offer_price && product.offer_price > 0 ? (
                 <>
                     <span className="text-sm font-semibold text-red-600">
-                        ${product.offer_price}
+                        {settings?.currency_icon || '$'}{product.offer_price}
                     </span>
                     <span className="text-xs text-gray-400 line-through">
-                        ${product.price}
+                        {settings?.currency_icon || '$'}{product.price}
                     </span>
                 </>
             ) : (
                 <span className="text-sm font-semibold text-gray-900">
-                    ${product.price}
+                    {settings?.currency_icon || '$'}{product.price}
                 </span>
             )}
         </div>

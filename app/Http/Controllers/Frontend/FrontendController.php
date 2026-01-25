@@ -132,13 +132,13 @@ class FrontendController extends Controller
                 'productImageGalleries:id,image,product_id,color_id',
                 'productImageGalleries.color:id,color_name,color_code'
             ])
-                ->withCount('reviews')
-                ->withAvg('reviews', 'rating')
+                ->withCount(['reviews' => fn($q) => $q->where('status', 1)])
+                ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
                 ->paginate(24)
                 ->withQueryString();
         });
 
-        return Inertia::render('Shop', [
+        return Inertia::render('ProductPage', [
             'products'   => $products,
             'filters'    => $request->all(),
             'categories' => Category::active()->get(['id', 'name', 'slug']),
@@ -168,8 +168,8 @@ class FrontendController extends Controller
                 'customization',
                 'productImageGalleries:id,image,product_id,color_id'
             ])
-                ->withCount('reviews')
-                ->withAvg('reviews', 'rating')
+                ->withCount(['reviews' => fn($q) => $q->where('status', 1)])
+                ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
                 ->paginate(24)
                 ->withQueryString();
         });
@@ -227,20 +227,20 @@ class FrontendController extends Controller
                     'category:id,name',
 
                     // Product Images + Color
-                    'productImageGalleries:id,image,product_id,color_id',
-                    'productImageGalleries.color:id,color_name,color_code',
+                    'productImageGalleries',
+                    'productImageGalleries.color',
 
                     // Sizes (ONLY name, no pivot)
-                    'sizes' => fn($q) => $q->active()->select('sizes.id', 'size_name'),
-                    // 'colors:id,color_name,color_code',
+                    'sizes',
+                    'colors',
 
                     // Customization (ONLY is_customizable)
                     'customization:id,product_id,is_customizable',
                 ])
 
                 /* review */
-                // ->withCount('reviews')
-                ->withAvg('reviews', 'rating')
+                // ->withCount(['reviews' => fn($q) => $q->where('status', 1)])
+                ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
 
                 ->firstOrFail();
         });
@@ -260,7 +260,20 @@ class FrontendController extends Controller
                 ]
             ]);
 
-        return Inertia::render('ProductDetails', ['product' => $product, 'reviews' => $reviews]);
+        $relatedProducts = Product::query()
+            ->active()
+            ->where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->take(6)
+            ->with(['category:id,name', 'productImageGalleries'])
+            ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
+            ->get();
+
+        return Inertia::render('ProductDetails', [
+            'product' => $product,
+            'reviews' => $reviews,
+            'relatedProducts' => $relatedProducts
+        ]);
     }
 
     // Product Search
@@ -281,8 +294,8 @@ class FrontendController extends Controller
                 'customization',
                 'productImageGalleries:id,image,product_id,color_id'
             ])
-                ->withCount('reviews')
-                ->withAvg('reviews', 'rating')
+                ->withCount(['reviews' => fn($q) => $q->where('status', 1)])
+                ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
                 ->paginate(24)
                 ->withQueryString();
         });

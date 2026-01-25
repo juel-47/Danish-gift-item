@@ -1,133 +1,178 @@
  // ProductDetailsFull.jsx - Complete version with Customer Review Form
 import React, { useState } from 'react';
+import { router, usePage, Link } from '@inertiajs/react';
+import toast from 'react-hot-toast';
 import Breadcrumb from '../components/Breadcrumb';
 import ProductCard from '../components/ProductCard'; 
 import ImageZoom from "react-image-zooom";
 
-const ProductDetailsFull = ({product}) => {
-  console.log(product);
-  // console.log(review);
+const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => {
+  const [imageError, setImageError] = useState({});
+  console.log(relatedProducts);
+  // Data Normalization
+  const normalizedProduct = {
+    ...product,
+    description: product.long_description || product.description,
+    shortDesc: product.short_description || product.shortDesc,
+    price: (product.offer_price && product.offer_price > 0) ? product.offer_price : (product.price || 0),
+    oldPrice: (product.offer_price && product.offer_price > 0) ? product.price : null,
+    rating: Number(product.reviews_avg_rating) || 0,
+    reviewCount: Number(product.reviews_count) || reviews.length || 0,
+    colors: product.colors || [],
+    sizes: product.sizes || [],
+    stock: product.qty || 0,
+  };
+
+  // Enhanced Color derivation: use product.colors OR unique colors from gallery
+  const derivedColors = React.useMemo(() => {
+    if (normalizedProduct.colors && normalizedProduct.colors.length > 0) return normalizedProduct.colors;
+    
+    // Fallback: collect colors from gallery images if they have color data
+    const galleryColors = (product.product_image_galleries || [])
+      .filter(item => item.color)
+      .map(item => item.color);
+    
+    // Get unique colors by ID
+    const unique = [];
+    const ids = new Set();
+    galleryColors.forEach(c => {
+      if (!ids.has(c.id)) {
+        ids.add(c.id);
+        unique.push(c);
+      }
+    });
+    return unique;
+  }, [normalizedProduct.colors, product.product_image_galleries]);
+
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedColor, setSelectedColor] = useState('Red');
-  const [selectedSize, setSelectedSize] = useState('M');
+  const [selectedColor, setSelectedColor] = useState('');
+  const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
+  const [isAdding, setIsAdding] = useState(false);
+
+  // Sync selection once product is loaded
+  React.useEffect(() => {
+    if (derivedColors.length > 0 && !selectedColor) {
+      setSelectedColor(derivedColors[0].color_name);
+    }
+  }, [derivedColors]);
+
+  React.useEffect(() => {
+    if (normalizedProduct.sizes.length > 0 && !selectedSize) {
+      setSelectedSize(normalizedProduct.sizes[0].size_name);
+    }
+  }, [normalizedProduct.sizes]);
 
   // Review Form States
   const [reviewRating, setReviewRating] = useState(0);
-  const [reviewTitle, setReviewTitle] = useState('');
   const [reviewText, setReviewText] = useState('');
-  const [reviewName, setReviewName] = useState('');
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
- 
-  const product = {
-    name: "Danish Flag Premium Polo T-Shirt",
-    price: 799,
-    oldPrice: 999,
-    rating: 4.7,
-    reviewCount: 342,
-    sku: "DK-POLO-FLAG-001",
-    shortDesc:
-      "Classic Danish flag inspired polo t-shirt • Premium cotton • Comfort fit • Perfect for casual & travel wear",
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
-    colors: [
-      { name: "Red", hex: "#A60A07" },
-      { name: "White", hex: "#FFFFFF" },
-      { name: "Navy", hex: "#0A1D37" },
-      { name: "Black", hex: "#000000" },
-    ],
+  const { auth, settings } = usePage().props;
 
-    sizes: ["S", "M", "L", "XL", "XXL"],
-
-    images: {
-      Red: ["/products/3.png", "/products/4.png", "/products/5.png"],
-      White: ["/products/4.png", "/products/3.png", "/products/5.png"],
-      Navy: ["/products/5.png", "/products/3.png", "/products/4.png"],
-      Black: ["/products/3.png", "/products/4.png", "/products/5.png"],
-    },
-
-    description: `Made from 100% premium combed cotton (180-200 GSM) with excellent breathability and durability. 
-    Features classic Danish flag design printed with eco-friendly, high-quality DTG printing that lasts wash after wash.
-    Perfect for everyday casual wear, holidays in Denmark or as a thoughtful souvenir/gift.`,
-
-    specifications: [
-      { title: "Material", value: "100% Premium Combed Cotton" },
-      { title: "Fabric Weight", value: "180-200 GSM" },
-      { title: "Fit", value: "Regular / Comfort Fit" },
-      { title: "Neck", value: "Ribbed Polo Collar" },
-      { title: "Sleeves", value: "Short Sleeves" },
-      { title: "Printing", value: "Direct-to-Garment (DTG)" },
-      { title: "Care", value: "Machine wash cold, inside out" },
-    ],
-
-    features: [
-      "Soft & breathable premium cotton",
-      "Vibrant Danish flag design",
-      "Reinforced collar & cuffs",
-      "Side slits for comfort",
-      "Tagless comfort neck label",
-      "Pre-shrunk & colorfast",
-    ],
-
-    reviews: [
-      {
-        id: 1,
-        name: "Lars Jensen",
-        rating: 5,
-        date: "15 Nov 2025",
-        text: "Perfect quality! The Danish flag print is very vibrant and the fabric feels premium. Highly recommended!",
-        verified: true,
-      },
-      {
-        id: 2,
-        name: "Maria Petersen",
-        rating: 4,
-        date: "02 Dec 2025",
-        text: "Nice t-shirt, good fit. Colors are a bit darker than in the pictures but still beautiful.",
-        verified: true,
-      },
-      {
-        id: 3,
-        name: "Ahmed Khan",
-        rating: 5,
-        date: "20 Dec 2025",
-        text: "Bought as a souvenir for my friend in Copenhagen. He loved it! Fast delivery too.",
-        verified: true,
-      },
-    ],
-
- 
+  // Image path helper
+  const formatImagePath = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    if (path.startsWith('/storage/')) return path;
+    if (path.startsWith('storage/')) return `/${path}`;
+    return `/storage/${path}`;
   };
 
-  const currentImages = product.images[selectedColor] || product.images.Red;
+  // Process all gallery images for the thumbnails
+  const currentImages = React.useMemo(() => {
+    return (product.product_image_galleries || []).map(item => formatImagePath(item.image));
+  }, [product.product_image_galleries]);
+
+  const NoImageSkeleton = ({ className = "" }) => (
+    <div className={`w-full h-full bg-gray-200 animate-pulse flex items-center justify-center ${className}`}>
+      <div className="flex flex-col items-center gap-2 opacity-40">
+        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.587-1.587a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">No Image</span>
+      </div>
+    </div>
+  );
 
   const handleReviewSubmit = (e) => {
     e.preventDefault();
-    if (reviewRating === 0 || !reviewText.trim() || !reviewName.trim()) {
-      alert("Please fill all required fields and select a rating");
+    if (!auth?.user) {
+      router.visit('/customer/login');
       return;
     }
 
-    // In real application you would send this to backend/API
-    console.log("New review submitted:", {
-      rating: reviewRating,
-      title: reviewTitle,
-      text: reviewText,
-      name: reviewName,
-      date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-    });
+    if (reviewRating === 0 || !reviewText.trim()) {
+      toast.error("Please select a rating and write your review");
+      return;
+    }
 
-    // Show success message
-    setReviewSubmitted(true);
+    setIsSubmittingReview(true);
     
-    // Reset form
-    setReviewRating(0);
-    setReviewTitle('');
-    setReviewText('');
-    setReviewName('');
+    router.post('/review', {
+      product_id: product.id,
+      rating: reviewRating,
+      review: reviewText,
+    }, {
+      onSuccess: () => {
+        setIsSubmittingReview(false);
+        setReviewSubmitted(true);
+        setReviewRating(0);
+        setReviewText('');
+        toast.success("Review submitted! It will be visible after approval.");
+      },
+      onError: () => {
+        setIsSubmittingReview(false);
+      },
+      preserveScroll: true
+    });
   };
 
-   
+  const handleAddToCart = (isBuyNow = false) => {
+    if (isAdding) return;
+    
+    const selectedColorObj = derivedColors.find(c => c.color_name === selectedColor);
+    const selectedSizeObj = normalizedProduct.sizes.find(s => s.size_name === selectedSize);
+
+    const data = {
+      product_id: product.id,
+      qty: quantity,
+      color_id: selectedColorObj?.id || null,
+      size_id: selectedSizeObj?.id || null,
+    };
+
+    if (!isBuyNow) setIsAdding(true);
+
+    router.post('/cart/add', data, {
+      onStart: () => {
+        if (!isBuyNow) toast.loading('Adding to cart...', { id: 'cart-toast' });
+      },
+      onSuccess: () => {
+        if (isBuyNow) {
+          router.visit('/checkout');
+        } else {
+          setIsAdding(false);
+          toast.dismiss('cart-toast');
+        }
+      },
+      onError: (errors) => {
+        setIsAdding(false);
+        const errorMsg = Object.values(errors)[0] || 'Something went wrong';
+        toast.error(errorMsg, { id: 'cart-toast' });
+      },
+      showProgress: isBuyNow,
+      preserveScroll: true,
+      preserveState: true,
+    });
+  };
+
+  const handleBuyNow = () => {
+    handleAddToCart(true);
+  };
+
+  const currentImageUrl = currentImages[selectedImage];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -143,21 +188,32 @@ const ProductDetailsFull = ({product}) => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 xl:gap-12">
           {/* Gallery */}
           <div className="space-y-4">
-            <div className="bg-white rounded-xl overflow-hidden border border-gray shadow-sm  ">
-              
-              <ImageZoom
-                src={currentImages[selectedImage]}  
-                alt={`${product.name} - ${selectedColor}`}
-                zoom="300"   
-                className="w-full h-full object-contain"
-              />
+            <div className="bg-white rounded-xl overflow-hidden border border-gray shadow-sm aspect-square">
+              {currentImageUrl && !imageError[selectedImage] ? (
+                <ImageZoom
+                  src={currentImageUrl}  
+                  alt={`${normalizedProduct.name} - ${selectedColor}`}
+                  zoom="200"   
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <NoImageSkeleton />
+              )}
             </div>
 
             <div className="grid grid-cols-4 gap-3">
               {currentImages.map((img, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setSelectedImage(idx)}
+                  onClick={() => {
+                    setSelectedImage(idx);
+                    // Sync color if this image has a color associated
+                    const galleryItem = product.product_image_galleries?.[idx];
+                    if (galleryItem && galleryItem.color_id) {
+                      const colorObj = derivedColors.find(c => parseInt(c.id) === parseInt(galleryItem.color_id));
+                      if (colorObj) setSelectedColor(colorObj.color_name);
+                    }
+                  }}
                   className={`
                     aspect-square rounded-lg overflow-hidden border-2 transition-all duration-200
                     ${
@@ -167,11 +223,20 @@ const ProductDetailsFull = ({product}) => {
                     }
                   `}
                 >
-                  <img
-                    src={img}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
+                  {img && !imageError[idx] ? (
+                    <img
+                      src={img}
+                      alt=""
+                      onError={() => setImageError(prev => ({ ...prev, [idx]: true }))}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.587-1.587a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
@@ -181,17 +246,17 @@ const ProductDetailsFull = ({product}) => {
           <div className="space-y-6 lg:sticky lg:top-6 self-start">
             <div>
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
-                {product.name}
+                {normalizedProduct.name}
               </h1>
 
               <div className="mt-3 flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl md:text-4xl font-bold text-red">
-                    DKK {product.price}
+                    {settings?.currency_icon || 'DKK'} {normalizedProduct.price}
                   </span>
-                  {product.oldPrice && (
+                  {normalizedProduct.oldPrice && normalizedProduct.oldPrice > 0 && (
                     <span className="text-xl text-gray-500 line-through">
-                      DKK {product.oldPrice}
+                      {settings?.currency_icon || 'DKK'} {normalizedProduct.oldPrice}
                     </span>
                   )}
                 </div>
@@ -202,7 +267,7 @@ const ProductDetailsFull = ({product}) => {
                       <svg
                         key={i}
                         className={`w-5 h-5 ${
-                          i < Math.floor(product.rating)
+                          i < Math.floor(normalizedProduct.rating)
                             ? "text-yellow-400"
                             : "text-gray-300"
                         }`}
@@ -214,12 +279,31 @@ const ProductDetailsFull = ({product}) => {
                     ))}
                   </div>
                   <span className="text-gray-600 font-medium">
-                    {product.rating} ({product.reviewCount} reviews)
+                    {normalizedProduct.rating} ({normalizedProduct.reviewCount} reviews)
                   </span>
                 </div>
               </div>
 
-              <p className="mt-4 text-gray-700">{product.shortDesc}</p>
+              <p className="mt-4 text-gray-700">{normalizedProduct.shortDesc}</p>
+              
+              {/* Stock Status */}
+              <div className="mt-4">
+                {normalizedProduct.stock > 0 ? (
+                  <div className="flex items-center gap-2">
+                    <span className={`flex h-2.5 w-2.5 rounded-full ${normalizedProduct.stock <= 5 ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`}></span>
+                    <span className={`text-sm font-medium ${normalizedProduct.stock <= 5 ? 'text-orange-700' : 'text-green-700'}`}>
+                      {normalizedProduct.stock <= 5 
+                        ? `Only ${normalizedProduct.stock} left in stock!` 
+                        : `In Stock: ${normalizedProduct.stock}`}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-2.5 w-2.5 rounded-full bg-red-500"></span>
+                    <span className="text-sm font-medium text-red-600 italic">Currently Out of Stock</span>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Color Variant */}
@@ -228,25 +312,37 @@ const ProductDetailsFull = ({product}) => {
                 Color
               </label>
               <div className="flex flex-wrap gap-3">
-                {product.colors.map((color) => (
-                  <button
-                    key={color.name}
-                    onClick={() => {
-                      setSelectedColor(color.name);
-                      setSelectedImage(0);
-                    }}
-                    className={`
-                      w-10 h-10 rounded-full border-2 transition-all duration-200
-                      ${
-                        selectedColor === color.name
-                          ? "border-red scale-110 shadow-md"
-                          : "border-gray-300 hover:border-gray-400"
-                      }
-                    `}
-                    style={{ backgroundColor: color.hex }}
-                    title={color.name}
-                  />
-                ))}
+                {derivedColors.length > 0 ? (
+                  derivedColors.map((color) => (
+                    <button
+                      key={color.id || color.color_name}
+                      onClick={() => {
+                        setSelectedColor(color.color_name);
+                        // Jump to the first image of this color in the gallery
+                        if (product.product_image_galleries) {
+                          const firstImgIdx = product.product_image_galleries.findIndex(
+                            img => parseInt(img.color_id) === parseInt(color.id)
+                          );
+                          if (firstImgIdx !== -1) setSelectedImage(firstImgIdx);
+                        }
+                      }}
+                      className={`
+                        w-10 h-10 rounded-full border-2 transition-all duration-200
+                        ${
+                          selectedColor === color.color_name
+                            ? "border-red scale-110 shadow-md"
+                            : "border-gray-300 hover:border-gray-400"
+                        }
+                      `}
+                      style={{ 
+                        backgroundColor: color.color_code?.startsWith('#') ? color.color_code : `#${color.color_code}` 
+                      }}
+                      title={color.color_name}
+                    />
+                  ))
+                ) : (
+                  <span className="text-gray-500 text-sm italic">No available color</span>
+                )}
               </div>
             </div>
 
@@ -256,22 +352,26 @@ const ProductDetailsFull = ({product}) => {
                 Size
               </label>
               <div className="flex flex-wrap gap-2">
-                {product.sizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`
-                      px-5 py-2.5 border rounded-md text-sm font-medium transition-all
-                      ${
-                        selectedSize === size
-                          ? "border-red bg-red-50 text-red"
-                          : "border-gray hover:border-red-300"
-                      }
-                    `}
-                  >
-                    {size}
-                  </button>
-                ))}
+                {normalizedProduct.sizes.length > 0 ? (
+                  normalizedProduct.sizes.map((size) => (
+                    <button
+                      key={size.id || size.size_name}
+                      onClick={() => setSelectedSize(size.size_name)}
+                      className={`
+                        px-5 py-2.5 border rounded-md text-sm font-medium transition-all
+                        ${
+                          selectedSize === size.size_name
+                            ? "border-red bg-red-50 text-red"
+                            : "border-gray hover:border-red-300"
+                        }
+                      `}
+                    >
+                      {size.size_name}
+                    </button>
+                  ))
+                ) : (
+                  <span className="text-gray-500 text-sm italic">No available size</span>
+                )}
               </div>
             </div>
 
@@ -282,16 +382,18 @@ const ProductDetailsFull = ({product}) => {
                 <div className="flex border border-gray rounded-lg overflow-hidden">
                   <button
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="w-12 h-11 flex items-center justify-center text-xl hover:bg-gray-100"
+                    disabled={normalizedProduct.stock <= 0}
+                    className="w-12 h-11 flex items-center justify-center text-xl hover:bg-gray-100 disabled:opacity-50"
                   >
                     −
                   </button>
                   <span className="w-16 flex items-center justify-center font-medium">
-                    {quantity}
+                    {normalizedProduct.stock > 0 ? quantity : 0}
                   </span>
                   <button
-                    onClick={() => setQuantity((q) => q + 1)}
-                    className="w-12 h-11 flex items-center justify-center text-xl hover:bg-gray-100"
+                    onClick={() => setQuantity((q) => Math.min(normalizedProduct.stock, q + 1))}
+                    disabled={normalizedProduct.stock <= 0 || quantity >= normalizedProduct.stock}
+                    className="w-12 h-11 flex items-center justify-center text-xl hover:bg-gray-100 disabled:opacity-50"
                   >
                     +
                   </button>
@@ -300,18 +402,33 @@ const ProductDetailsFull = ({product}) => {
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
-                  className="
-                  flex-1 bg-red text-white py-4 rounded-lg 
-                  font-bold text-lg hover:bg-red-800 transition-colors
-                "
+                  onClick={() => handleAddToCart(false)}
+                  disabled={isAdding || normalizedProduct.stock <= 0}
+                  className={`
+                    flex-1 py-4 rounded-lg font-bold text-lg transition-all duration-200
+                    flex items-center justify-center gap-2
+                    ${normalizedProduct.stock <= 0 
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+                      : "bg-red text-white hover:bg-red-800 active:scale-95 disabled:opacity-70"}
+                  `}
                 >
-                  Add to Cart
+                  {normalizedProduct.stock <= 0 ? (
+                    "Out of Stock"
+                  ) : isAdding ? (
+                    <span className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    "Add to Cart"
+                  )}
                 </button>
                 <button
-                  className="
-                  flex-1 border-2 border-red text-red
-                  py-4 rounded-lg font-bold text-lg hover:bg-red-50 transition-colors
-                "
+                  onClick={handleBuyNow}
+                  disabled={normalizedProduct.stock <= 0}
+                  className={`
+                    flex-1 border-2 py-4 rounded-lg font-bold text-lg active:scale-95 transition-all duration-200
+                    ${normalizedProduct.stock <= 0
+                      ? "border-gray-300 text-gray-400 cursor-not-allowed"
+                      : "border-red text-red hover:bg-red-50"}
+                  `}
                 >
                   Buy Now
                 </button>
@@ -354,13 +471,13 @@ const ProductDetailsFull = ({product}) => {
           <div className="py-8">
             {activeTab === "description" && (
               <div className="prose max-w-none text-gray-700">
-                <p>{product.description}</p>
+                <div dangerouslySetInnerHTML={{ __html: normalizedProduct.description }} />
               </div>
             )}
 
             {activeTab === "features" && (
               <ul className="grid md:grid-cols-2 gap-4">
-                {product.features.map((feature, i) => (
+                {(normalizedProduct.features || []).map((feature, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <span className="text-red text-xl">✓</span>
                     <span>{feature}</span>
@@ -371,7 +488,7 @@ const ProductDetailsFull = ({product}) => {
 
             {activeTab === "specification" && (
               <div className="grid md:grid-cols-2 gap-6">
-                {product.specifications.map((spec, i) => (
+                {(normalizedProduct.specifications || []).map((spec, i) => (
                   <div
                     key={i}
                     className="flex justify-between py-2 border-b border-gray"
@@ -399,11 +516,11 @@ const ProductDetailsFull = ({product}) => {
         {/* ==================== CUSTOMER REVIEWS ==================== */}
         <div className="mt-16 border-t border-gray pt-12">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">
-            Customer Reviews ({product.reviewCount})
+            Customer Reviews ({normalizedProduct.reviewCount})
           </h2>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {product.reviews.map((review) => (
+            {reviews.map((review) => (
               <div
                 key={review.id}
                 className="bg-white p-6 rounded-xl border border-gray shadow-sm"
@@ -425,13 +542,15 @@ const ProductDetailsFull = ({product}) => {
                       </svg>
                     ))}
                   </div>
-                  <span className="text-sm text-gray-500">{review.date}</span>
+                  <span className="text-sm text-gray-500">
+                    {new Date(review.created_at).toLocaleDateString()}
+                  </span>
                 </div>
 
-                <p className="text-gray-700 mb-4">"{review.text}"</p>
+                <p className="text-gray-700 mb-4">"{review.comment}"</p>
 
                 <div className="flex items-center justify-between">
-                  <span className="font-medium">{review.name}</span>
+                  <span className="font-medium">{review.user?.name}</span>
                   {review.verified && (
                     <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
                       Verified Purchase
@@ -448,18 +567,39 @@ const ProductDetailsFull = ({product}) => {
               Write a Review
             </h3>
 
-            {reviewSubmitted ? (
+            {!auth?.user ? (
+              <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                <div className="text-4xl mb-4 text-gray-400">🔒</div>
+                <h4 className="text-lg font-semibold text-gray-700 mb-2">
+                  Please login to write a review
+                </h4>
+                <p className="text-gray-500 mb-6 max-w-xs mx-auto">
+                  Only registered customers can share their experience with our products.
+                </p>
+                <Link
+                  href="/customer/login"
+                  className="bg-red text-white px-8 py-3 rounded-lg font-medium hover:bg-red-800 transition-colors inline-block"
+                >
+                  Login / Register Now
+                </Link>
+              </div>
+            ) : reviewSubmitted ? (
               <div className="text-center py-8">
                 <div className="text-5xl mb-4">🎉</div>
                 <h4 className="text-xl font-bold text-green-700 mb-2">
                   Thank you for your review!
                 </h4>
                 <p className="text-gray-600">
-                  Your feedback helps other customers make better decisions.
+                  Your feedback helps other customers make better decisions. Your review is currently pending approval.
                 </p>
               </div>
             ) : (
               <form onSubmit={handleReviewSubmit} className="space-y-6">
+                <div>
+                  <p className="text-sm text-gray-600 mb-4 italic">
+                    Posting as <span className="font-semibold text-gray-900">{auth.user.name}</span>
+                  </p>
+                </div>
                 {/* Rating Stars */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -489,24 +629,6 @@ const ProductDetailsFull = ({product}) => {
                   </div>
                 </div>
 
-                {/* Review Title */}
-                <div>
-                  <label
-                    htmlFor="reviewTitle"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Review Title (optional)
-                  </label>
-                  <input
-                    type="text"
-                    id="reviewTitle"
-                    value={reviewTitle}
-                    onChange={(e) => setReviewTitle(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray rounded-lg focus:outline-none focus:border-red"
-                    placeholder="Great quality Danish t-shirt!"
-                  />
-                </div>
-
                 {/* Review Text */}
                 <div>
                   <label
@@ -521,26 +643,7 @@ const ProductDetailsFull = ({product}) => {
                     value={reviewText}
                     onChange={(e) => setReviewText(e.target.value)}
                     className="w-full px-4 py-2 border border-gray rounded-lg focus:outline-none focus:border-red"
-                    placeholder="What did you like or dislike about this product?..."
-                    required
-                  />
-                </div>
-
-                {/* Name */}
-                <div>
-                  <label
-                    htmlFor="reviewName"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Your Name *
-                  </label>
-                  <input
-                    type="text"
-                    id="reviewName"
-                    value={reviewName}
-                    onChange={(e) => setReviewName(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray rounded-lg focus:outline-none focus:border-red"
-                    placeholder="John Doe"
+                    placeholder="Tell us about your experience with this product..."
                     required
                   />
                 </div>
@@ -548,9 +651,10 @@ const ProductDetailsFull = ({product}) => {
                 <div className="pt-4">
                   <button
                     type="submit"
-                    className="bg-red text-white px-8 py-3 rounded-lg font-medium hover:bg-red-800 transition-colors"
+                    disabled={isSubmittingReview}
+                    className={`bg-red text-white px-8 py-3 rounded-lg font-medium hover:bg-red-800 transition-colors ${isSubmittingReview ? 'opacity-70 cursor-not-allowed' : ''}`}
                   >
-                    Submit Review
+                    {isSubmittingReview ? 'Submitting...' : 'Submit Review'}
                   </button>
                 </div>
 
@@ -570,9 +674,13 @@ const ProductDetailsFull = ({product}) => {
           </h2>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
-            {products.map((item) => (
-              <ProductCard key={item.id} product={item} />
-            ))}
+            {relatedProducts.length > 0 ? (
+              relatedProducts.map((item) => (
+                <ProductCard key={item.id} product={item} />
+              ))
+            ) : (
+              <p className="text-gray-500 italic col-span-full">No related products found.</p>
+            )}
           </div>
         </div>
       </div>

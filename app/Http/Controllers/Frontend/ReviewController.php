@@ -21,7 +21,7 @@ class ReviewController extends Controller
         $user = $request->user();
         // dd($request->all());
         if (!$user) {
-            return redirect()->back()->with('error', 'Unauthorized! Please login to submit a review.');
+            return redirect()->back()->with('error', 'Please login to submit a review.');
         }
 
         ProductReview::create([
@@ -32,6 +32,6 @@ class ReviewController extends Controller
             'status'     => 0
         ]);
 
-        return redirect()->back()->with('Review submitted successfully');
+        return redirect()->back()->with('success', 'Review submitted successfully. It will be visible after approval.');
     }
 }
