@@ -10,6 +10,7 @@ use App\Models\LogoSetting;
 use App\Services\CartService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -48,41 +49,41 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => Auth::guard('customer')->user(),
             ],
-            'logos' => [
+            'logos' => Cache::remember('shared_logos', 3600, fn() => [
                 'logo'    => LogoSetting::value('logo'),
                 'favicon' => LogoSetting::value('favicon'),
-            ],
-            // 'cart' => $cartService->getCartSummary(),
+            ]),
             'cart' => $cartService->getNavbarCartInfo(),
-            // 'footerInfo' => [
-            //     'footerInfo' => FooterInfo::select('logo', 'phone', 'email', 'address', 'copyright')->first(),
-            // ],
-            'footerInfo' => FooterInfo::select('logo', 'phone', 'email', 'address', 'copyright')
-                ->first()?->makeHidden([])->toArray() ?? [
-                    'logo'       => null,
-                    'phone'      => '',
-                    'email'      => '',
-                    'address'    => '',
-                    'copyright'  => '',
-                ],
-            'footer_social' => FooterSocial::where('status', 1)->select('icon', 'icon_extra', 'name', 'url', 'serial_no')
-                ->get()
-                ->map(function ($item) {
-                    return $item->only(['icon', 'icon_extra', 'name', 'url', 'serial_no']);
-                }),
-            'categoriess' => Category::active()->frontShow()
-                ->with([
-                    'subCategories' => function($q) {
-                        $q->active()->with(['childCategories' => function($q) {
-                            $q->active();
-                        }]);
-                    }
-                ])->get(),
+            'footerInfo' => Cache::remember('shared_footer_info', 3600, fn() => 
+                FooterInfo::select('logo', 'phone', 'email', 'address', 'copyright')
+                    ->first()?->makeHidden([])->toArray() ?? [
+                        'logo'       => null,
+                        'phone'      => '',
+                        'email'      => '',
+                        'address'    => '',
+                        'copyright'  => '',
+                    ]
+            ),
+            'footer_social' => Cache::remember('shared_footer_social', 3600, fn() => 
+                FooterSocial::where('status', 1)->select('icon', 'icon_extra', 'name', 'url', 'serial_no')
+                    ->get()
+                    ->map(fn($item) => $item->only(['icon', 'icon_extra', 'name', 'url', 'serial_no']))
+            ),
+            'categoriess' => Cache::remember('shared_categories_tree', 1800, fn() => 
+                Category::active()->frontShow()
+                    ->with([
+                        'subCategories' => function($q) {
+                            $q->active()->with(['childCategories' => function($q) {
+                                $q->active();
+                            }]);
+                        }
+                    ])->get()
+            ),
             'flash' => [
                 'success' => session('success'),
                 'error' => session('error'),
             ],
-            'settings' => GeneralSetting::first(),
+            'settings' => Cache::remember('shared_settings', 3600, fn() => GeneralSetting::first()),
         ];
     }
 }

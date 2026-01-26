@@ -28,9 +28,8 @@ export const useCartStore = create(
                     const quantity = Number(i.quantity) || 1; // Force number
                     const basePrice = parseFloat(i.price || 0);
                     const variantTotal = parseFloat(i.options?.variant_total || 0);
-                    const extraPrice = parseFloat(i.options?.extra_price || 0);
 
-                    const itemTotalPrice = basePrice + variantTotal + extraPrice;
+                    const itemTotalPrice = basePrice + variantTotal;
                     return sum + itemTotalPrice * quantity;
                 }, 0);
 
@@ -109,7 +108,47 @@ export const useCartStore = create(
                     cartCount: 0,
                 });
 
-                axios.post(route('cart.clear')).catch(console.error);
+                axios.delete(route('cart.clear')).catch(console.error);
+            },
+
+            addItem: (product, quantity = 1, options = {}) => {
+                set((state) => {
+                    const existingItemIndex = state.cartItems.findIndex(
+                        (item) => 
+                            item.product_id === product.id && 
+                            item.options?.color_id === options.color_id && 
+                            item.options?.size_id === options.size_id
+                    );
+
+                    let newItems;
+                    if (existingItemIndex > -1) {
+                        newItems = [...state.cartItems];
+                        newItems[existingItemIndex] = {
+                            ...newItems[existingItemIndex],
+                            quantity: Number(newItems[existingItemIndex].quantity) + Number(quantity)
+                        };
+                    } else {
+                        newItems = [
+                            ...state.cartItems,
+                            {
+                                id: Date.now(), // Temporary ID for optimistic UI
+                                product_id: product.id,
+                                name: product.name,
+                                price: product.price,
+                                quantity: Number(quantity),
+                                options: {
+                                    ...options,
+                                    image: product.thumb_image,
+                                    variant_total: 0, // Simplified for now
+                                }
+                            }
+                        ];
+                    }
+                    return get().recalculate(newItems);
+                });
+                // Note: We don't call debouncedSync() here because the actual persistence 
+                // is handled by the server-side route (e.g. router.post('/cart/add')).
+                // This method is primarily for instant UI feedback (optimistic update).
             },
 
             syncCart: async () => {

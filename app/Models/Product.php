@@ -94,11 +94,6 @@ class Product extends Model
                 'sizes:id,size_name,price,is_default',
             ]);
     }
-    /** customization relationship */
-    public function customization()
-    {
-        return $this->hasOne(productCustomization::class);
-    }
     /** Shipping Method  relationship */
     public function shippingMethods()
     {

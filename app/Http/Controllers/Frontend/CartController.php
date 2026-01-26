@@ -31,10 +31,9 @@ class CartController extends Controller
             'qty' => 'required|integer|min:1',
             'size_id' => 'nullable|integer|exists:sizes,id',
             'color_id' => 'nullable|integer|exists:colors,id',
-            'customization_id' => 'nullable|integer|exists:customer_customizations,id',
         ]);
 
-        $product = Product::with(['sizes', 'colors'])->findOrFail($request->product_id);
+        $product = Product::findOrFail($request->product_id);
 
         /* Stock Check (Cumulative) */
         $userId = auth('customer')->id();
@@ -54,7 +53,10 @@ class CartController extends Controller
             $msg = $available > 0 
                 ? "You already have $currentInCart in cart. Only $available more available." 
                 : "Product is out of stock or already at maximum available quantity in your cart.";
-                
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
             return back()->with('error', $msg);
         }
 
@@ -63,12 +65,14 @@ class CartController extends Controller
         [$colorPrice, $colorName] = [0, null];
 
         if ($request->size_id) {
+            $product->load('sizes');
             $size = $product->sizes->firstWhere('id', $request->size_id);
             $sizePrice = $size->pivot->size_price ?? 0;
             $sizeName = $size->size_name ?? null;
         }
 
         if ($request->color_id) {
+            $product->load('colors');
             $color = $product->colors->firstWhere('id', $request->color_id);
             $colorPrice = $color->pivot->color_price ?? 0;
             $colorName = $color->color_name ?? null;
@@ -80,16 +84,6 @@ class CartController extends Controller
         /* Auth / Session */
         $userId = auth('customer')->id();
         $sessionId = session()->getId();
-        // dd('user_id',$userId, 'session_id'.$sessionId);
-        /* Customization */
-        $extraPrice = 0;
-        $frontImage = $backImage = null;
-        if ($request->customization_id) {
-            $cust = CustomerCustomization::find($request->customization_id);
-            $extraPrice = $cust->price ?? 0;
-            $frontImage = $cust->front_image ?? null;
-            $backImage = $cust->back_image ?? null;
-        }
 
         /* Existing cart item */
         $cartItem = Cart::where('product_id', $product->id)
@@ -97,7 +91,6 @@ class CartController extends Controller
             ->when(!$userId, fn($q) => $q->where('session_id', $sessionId))
             ->whereJsonContains('options->size_id', $request->size_id)
             ->whereJsonContains('options->color_id', $request->color_id)
-            ->whereJsonContains('options->customization_id', $request->customization_id)
             ->first();
 
         if ($cartItem) {
@@ -118,17 +111,20 @@ class CartController extends Controller
                     'color_name' => $colorName,
                     'color_price' => $colorPrice,
                     'variant_total' => $variantTotal,
-                    'customization_id' => $request->customization_id,
-                    'extra_price' => $extraPrice,
-                    'front_image' => $frontImage,
-                    'back_image' => $backImage,
                     'is_free_product' => false,
                 ],
             ]);
         }
 
         // Apply promotions / free products after add
-        $this->applyPromotions();
+        $this->applyPromotions($this->currentCart());
+
+        if (!$request->inertia() && ($request->ajax() || $request->wantsJson())) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Product added to cart successfully!',
+            ]);
+        }
 
         // return redirect()->route('cart.index')->with('success', 'Product added to cart');
         return back()->with('success', 'Product added to cart successfully!');
@@ -143,19 +139,7 @@ class CartController extends Controller
             $opt = $item->options;
 
             // Calculate total
-            $item->total = ($item->price + ($opt['variant_total'] ?? 0) + ($opt['extra_price'] ?? 0)) * $item->quantity;
-
-            // Customization info with price
-            $item->customization = (!empty($opt['front_image']) || !empty($opt['back_image']))
-                ? [
-                    'front_image' => $opt['front_image'] ?? null,
-                    'back_image' => $opt['back_image'] ?? null,
-                    'price' => $opt['extra_price'] ?? 0, // add the customization price here
-                ]
-                : null;
-
-            // Optionally, include the customization_id if needed
-            $item->customization_id = $opt['customization_id'] ?? null;
+            $item->total = ($item->price + ($opt['variant_total'] ?? 0)) * $item->quantity;
         });
 
         $total = $cartItems->sum('total');
@@ -197,7 +181,7 @@ class CartController extends Controller
         return back();
     }
 
-    public function removeCart($id)
+    public function removeCart(Request $request, $id)
     {
         $userId = auth('customer')->id();
         $sessionId = session()->getId();
@@ -209,30 +193,10 @@ class CartController extends Controller
             })
             ->firstOrFail();
 
-        /* ============================
-       FIND CUSTOMIZATION
-    ============================ */
-        $customization = customerCustomization::where('product_id', $cart->product_id)
-            ->when($userId, fn($q) => $q->where('user_id', $userId))
-            ->when(!$userId, fn($q) => $q->where('session_id', $sessionId))
-            ->first();
-
-        if ($customization) {
-            if ($customization->front_image) {
-                $this->delete_image($customization->front_image);
-            }
-
-            if ($customization->back_image) {
-                $this->delete_image($customization->back_image);
-            }
-
-            $customization->delete();
-        }
-
         $cart->delete();
 
-        // AJAX বা Inertia request 
-        if (request()->wantsJson() || request()->ajax() || request()->header('X-Requested-With') || request()->header('X-Inertia')) {
+        // JSON response for Axios/AJAX ONLY
+        if (!$request->inertia() && ($request->ajax() || $request->wantsJson())) {
             return response()->json([
                 'success' => true,
                 'message' => 'Cart item removed'
@@ -251,16 +215,14 @@ class CartController extends Controller
                 ->when(!$userId, fn($qq) => $qq->where('session_id', $sessionId));
         })->get();
 
-        foreach ($cartItems as $item) {
-            if ($item->customization_id) {
-                customerCustomization::where('id', $item->customization_id)->delete();
-            }
-        }
-
         Cart::where(function ($q) use ($userId, $sessionId) {
             $q->when($userId, fn($qq) => $qq->where('user_id', $userId))
                 ->when(!$userId, fn($qq) => $qq->where('session_id', $sessionId));
         })->delete();
+
+        if (!request()->inertia() && (request()->ajax() || request()->wantsJson())) {
+            return response()->json(['success' => true, 'message' => 'Cart cleared successfully!']);
+        }
 
         return back();
     }
@@ -283,11 +245,14 @@ class CartController extends Controller
     /* =========================
         PROMOTIONS / FREE PRODUCTS
     ========================= */
-    private function applyPromotions()
+    private function applyPromotions($cartItems = null)
     {
         $userId = auth('customer')->id();
         $sessionId = session()->getId();
-        $cartItems = $this->currentCart();
+        
+        if (!$cartItems) {
+            $cartItems = $this->currentCart();
+        }
 
         $promotions = Promotion::where('status', 1)->get();
 

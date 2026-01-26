@@ -364,75 +364,11 @@
 </div>
 <button type="button" class="btn btn-primary" id="addColorRow">Add More Color</button>
 
-
-                                <hr>
-                                <h5>🔧 Product Customization</h5>
-
-                                <div class="form-group">
-                                    <label>Is Customizable?</label>
-                                    <select name="is_customizable" id="is_customizable" class="form-control">
-                                        <option value="0"
-                                            {{ ($product->customization->is_customizable ?? 0) == 0 ? 'selected' : '' }}>No
-                                        </option>
-                                        <option value="1"
-                                            {{ ($product->customization->is_customizable ?? 0) == 1 ? 'selected' : '' }}>
-                                            Yes</option>
-                                    </select>
-                                </div>
-
-                                <div id="customize_section" style="display: none;">
-                                    <div class="row">
-                                        <div class="form-group col-md-6">
-                                            <label>Front Side Customize Image</label>
-                                            <input type="file" name="front_image" class="form-control"
-                                                onchange="previewImage(this, 'front_preview')">
-                                            @if (!empty($product->customization->front_image))
-                                                <img id="front_preview"
-                                                    src="{{ asset($product->customization->front_image) }}"
-                                                    width="150px" class="mt-2">
-                                            @else
-                                                <img id="front_preview" src="" width="150px" class="mt-2"
-                                                    style="display:none;">
-                                            @endif
-                                        </div>
-                                        <div class="form-group col-md-6">
-                                            <label>Back Side Customize Image</label>
-                                            <input type="file" name="back_image" class="form-control"
-                                                onchange="previewImage(this, 'back_preview')">
-                                            @if (!empty($product->customization->back_image))
-                                                <img id="back_preview"
-                                                    src="{{ asset($product->customization->back_image) }}" width="150px"
-                                                    class="mt-2">
-                                            @else
-                                                <img id="back_preview" src="" width="150px" class="mt-2"
-                                                    style="display:none;">
-                                            @endif
-                                        </div>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="form-group col-md-4">
-                                            <label>Front Side Extra Cost</label>
-                                            <input type="number" name="front_price" step="0.01" class="form-control"
-                                                placeholder="0.00"
-                                                value="{{ $product->customization->front_price ?? '' }}">
-                                        </div>
-                                        <div class="form-group col-md-4">
-                                            <label>Back Side Extra Cost</label>
-                                            <input type="number" name="back_price" step="0.01" class="form-control"
-                                                placeholder="0.00"
-                                                value="{{ $product->customization->back_price ?? '' }}">
-                                        </div>
-                                        <div class="form-group col-md-4">
-                                            <label>Both Side Extra Cost</label>
-                                            <input type="number" name="both_price" step="0.01" class="form-control"
-                                                placeholder="0.00"
-                                                value="{{ $product->customization->both_price ?? '' }}">
-                                        </div>
-                                    </div>
-                                </div>
-                                <button type="submit" class="btn btn-primary mt-3">Update</button>
-                            </form>
+<hr>
+<div class="mt-4">
+    <button type="submit" class="btn btn-primary start-left">Update</button>
+</div>
+</form>
                         </div>
                     </div>
                 </div>
@@ -685,34 +621,8 @@
             document.getElementById('is_customizable').addEventListener('change', toggleCustomizeSection);
         });
     </script> --}}
-    <script>
-        function toggleCustomizeSection() {
-            let select = document.getElementById('is_customizable');
-            let section = document.getElementById('customize_section');
-            if (select.value == 1) {
-                section.style.display = 'block';
-            } else {
-                section.style.display = 'none';
-            }
-        }
+</script>
 
-        function previewImage(input, previewId) {
-            let preview = document.getElementById(previewId);
-            if (input.files && input.files[0]) {
-                let reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            toggleCustomizeSection(); // show/hide on page load
-            document.getElementById('is_customizable').addEventListener('change', toggleCustomizeSection);
-        });
-    </script>
 
     {{-- <script>
         $(document).ready(function() {

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\Coupon;
-use App\Models\customerCustomization;
 use App\Models\Product;
 use App\Models\Promotion;
 use Illuminate\Http\Request;
@@ -444,7 +443,6 @@ class CartController extends Controller
             'qty' => 'required|integer|min:1',
             'size_id' => 'nullable|integer|exists:sizes,id',
             'color_id' => 'nullable|integer|exists:colors,id',
-            'customization_id' => 'nullable|integer|exists:customer_customizations,id',
         ]);
 
         $product = Product::with(['sizes', 'colors'])->findOrFail($request->product_id);
@@ -496,17 +494,7 @@ class CartController extends Controller
             $cookie = cookie('cart_session', $session_id, 60 * 24 * 30, '/', null, false, false, false, 'lax');
         }
 
-        // Customization
-        $extraPrice = 0;
-        $font_image = $back_image = null;
-        if ($request->customization_id) {
-            $cust = customerCustomization::find($request->customization_id);
-            if ($cust) {
-                $extraPrice = $cust->price ?? 0;
-                $font_image = $cust->front_image;
-                $back_image = $cust->back_image;
-            }
-        }
+
 
         // Same variant check
         $existingItem = Cart::where(function ($q) use ($user_id, $session_id) {
@@ -537,9 +525,6 @@ class CartController extends Controller
                     'color_name' => $colorName,
                     'color_price' => $colorPrice,
                     'variant_total' => $variantTotal,
-                    'extra_price' => $extraPrice,
-                    'font_image' => $font_image,
-                    'back_image' => $back_image,
                     'is_free_product' => false
                 ]),
             ]);
@@ -589,11 +574,9 @@ class CartController extends Controller
                 'name' => $opt['color_name'] ?? null,
                 'price' => $opt['color_price'] ?? 0
             ];
-            $item->customization = (!empty($opt['font_image']) || !empty($opt['back_image']))
-                ? ['front_image' => $opt['font_image'] ?? null, 'back_image' => $opt['back_image'] ?? null]
-                : null;
+
             $item->image = $opt['image'] ?? ($item->product->thumb_image ?? null);
-            $item->total = ($item->price + $item->variant_total + $item->extra_price) * $item->quantity;
+            $item->total = ($item->price + $item->variant_total) * $item->quantity;
 
             return $item;
         });
@@ -642,7 +625,7 @@ class CartController extends Controller
         // Calculate subtotal
         $subTotal = $cartItems->sum(function ($item) {
             $options = json_decode($item->options, true) ?? [];
-            return ($item->price + ($options['variant_total'] ?? 0) + ($options['extra_price'] ?? 0)) * $item->quantity;
+            return ($item->price + ($options['variant_total'] ?? 0)) * $item->quantity;
         });
 
         // Coupon handling
@@ -670,10 +653,6 @@ class CartController extends Controller
         $cartItems = $cartItems->map(function ($item) {
             $options = json_decode($item->options, true) ?? [];
 
-            $item->front_image = $options['font_image'] ?? null;
-            $item->back_image = $options['back_image'] ?? null;
-            $item->extra_price = $options['extra_price'] ?? 0;
-
             $item->size = [
                 'id' => $options['size_id'] ?? null,
                 'name' => $options['size_name'] ?? null,
@@ -685,7 +664,7 @@ class CartController extends Controller
                 'price' => $options['color_price'] ?? 0
             ];
 
-            $item->total = ($item->price + ($options['variant_total'] ?? 0) + ($options['extra_price'] ?? 0)) * $item->quantity;
+            $item->total = ($item->price + ($options['variant_total'] ?? 0)) * $item->quantity;
 
             unset($item->options);
 
@@ -721,7 +700,7 @@ class CartController extends Controller
         $cartItem->update(['quantity' => $request->quantity]);
 
         $opt = json_decode($cartItem->options, true);
-        $total = ($cartItem->price + ($opt['variant_total'] ?? 0) + ($opt['extra_price'] ?? 0)) * $cartItem->quantity;
+        $total = ($cartItem->price + ($opt['variant_total'] ?? 0)) * $cartItem->quantity;
 
         return apiResponse('success', 'Cart updated successfully!', [
             'product_total' => number_format($total, 2),
@@ -751,16 +730,6 @@ class CartController extends Controller
                     ->when(!$user_id && $session_id, fn($qq) => $qq->where('session_id', $session_id));
             })
             ->firstOrFail();
-
-        if ($cart->user_id) {
-            customerCustomization::where('user_id', $cart->user_id)
-                ->where('product_id', $cart->product_id)
-                ->delete();
-        } else {
-            customerCustomization::where('session_id', $cart->session_id)
-                ->where('product_id', $cart->product_id)
-                ->delete();
-        }
 
         $cart->delete();
 
@@ -795,7 +764,7 @@ class CartController extends Controller
     private function calculateCartTotal($cartItems)
     {
         return $cartItems->sum(
-            fn($i) => ($i->price + (json_decode($i->options, true)['variant_total'] ?? 0) + (json_decode($i->options, true)['extra_price'] ?? 0)) * $i->quantity
+            fn($i) => ($i->price + (json_decode($i->options, true)['variant_total'] ?? 0)) * $i->quantity
         );
     }
 

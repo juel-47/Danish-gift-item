@@ -81,8 +81,7 @@ class CartService
         return $items->sum(function ($item) {
             $basePrice    = $item->price;
             $variantTotal = $item->options['variant_total'] ?? 0;
-            $extraPrice   = $item->options['extra_price'] ?? 0;
-            return ($basePrice + $variantTotal + $extraPrice) * $item->quantity;
+            return ($basePrice + $variantTotal) * $item->quantity;
         });
     }
 

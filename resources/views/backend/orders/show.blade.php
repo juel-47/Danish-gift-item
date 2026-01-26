@@ -129,7 +129,7 @@
                                             <td>{{ $loop->iteration }}</td>
                                             <td>
                                                 @if(isset($product->product->slug))
-                                                    <a href="{{ route('api.v1.product-detail', $product->product->slug) }}" target="_blank">
+                                                    <a href="{{ route('product-details', $product->product->slug) }}" target="_blank">
                                                         {{ $product->product_name }}
                                                     </a>
                                                 @else
@@ -156,34 +156,6 @@
                                             <td class="text-right">{{ $settings->currency_icon }}{{ number_format($totalPrice,2) }}</td>
                                         </tr>
 
-                                        {{-- Customization Preview --}}
-                                        @if($frontImage || $backImage)
-                                            <tr>
-                                                <td colspan="7">
-                                                    <strong>Customization Preview:</strong>
-                                                    <div class="d-flex flex-wrap gap-3 mt-2">
-                                                        @if($frontImage)
-                                                            <div class="text-center">
-                                                                <p>Front Design:</p>
-                                                                <img src="{{ asset($frontImage) }}" alt="Front" width="150" class="border rounded p-1 mb-2">
-                                                                <a href="{{ asset($frontImage) }}" download class="btn btn-sm btn-outline-primary">
-                                                                    <i class="fas fa-download"></i> Download
-                                                                </a>
-                                                            </div>
-                                                        @endif
-                                                        @if($backImage)
-                                                            <div class="text-center">
-                                                                <p>Back Design:</p>
-                                                                <img src="{{ asset($backImage) }}" alt="Back" width="150" class="border rounded p-1 mb-2">
-                                                                <a href="{{ asset($backImage) }}" download class="btn btn-sm btn-outline-primary">
-                                                                    <i class="fas fa-download"></i> Download
-                                                                </a>
-                                                            </div>
-                                                        @endif
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endif
                                     @endforeach
                                 </tbody>
                             </table>

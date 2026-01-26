@@ -14,7 +14,6 @@ use App\Models\ChildCategory;
 use App\Models\Color;
 use App\Models\OrderProduct;
 use App\Models\Product;
-use App\Models\productCustomization;
 use App\Models\ProductImageGallery;
 use App\Models\Size;
 use App\Models\SubCategory;
@@ -135,30 +134,7 @@ class ProductController extends Controller
 //     }
 
 
-//     /** CUSTOMIZATION */
-//     $isCustomizable = $request->input('is_customizable', 0);
 
-//     if ($isCustomizable) {
-//         $frontPath = $request->hasFile('front_image')
-//             ? $this->upload_image($request, 'front_image', 'uploads/customize')
-//             : null;
-
-//         $backPath = $request->hasFile('back_image')
-//             ? $this->upload_image($request, 'back_image', 'uploads/customize')
-//             : null;
-
-//         $product->customization()->updateOrCreate(
-//             ['product_id' => $product->id],
-//             [
-//                 'is_customizable' => 1,
-//                 'front_image'     => $frontPath,
-//                 'back_image'      => $backPath,
-//                 'front_price'     => $request->input('front_price', 0)  ?: 0,
-//                 'back_price'      => $request->input('back_price', 0) ?: 0,
-//                 'both_price'      => $request->input('both_price', 0)  ?: 0,
-//             ]
-//         );
-//     }
 
 //     Toastr::success('Created Product Successfully!', 'success');
 //     return redirect()->route('admin.products.index');
@@ -268,30 +244,7 @@ public function store(ProductCreateRequest $request)
         ]);
     }
 
-    /** CUSTOMIZATION */
-    $isCustomizable = $request->input('is_customizable', 0);
 
-    if ($isCustomizable) {
-        $frontPath = $request->hasFile('front_image')
-            ? $this->upload_image($request, 'front_image', 'uploads/customize')
-            : null;
-
-        $backPath = $request->hasFile('back_image')
-            ? $this->upload_image($request, 'back_image', 'uploads/customize')
-            : null;
-
-        $product->customization()->updateOrCreate(
-            ['product_id' => $product->id],
-            [
-                'is_customizable' => 1,
-                'front_image'     => $frontPath,
-                'back_image'      => $backPath,
-                'front_price'     => $request->input('front_price', 0)  ?: 0,
-                'back_price'      => $request->input('back_price', 0)   ?: 0,
-                'both_price'      => $request->input('both_price', 0)   ?: 0,
-            ]
-        );
-    }
 
     Toastr::success('Created Product Successfully!', 'success');
     return redirect()->route('admin.products.index');
@@ -311,7 +264,7 @@ public function store(ProductCreateRequest $request)
      */
     public function edit(string $id)
     {
-        $product = Product::with(['customization', 'productImageGalleries'])->findOr($id);
+        $product = Product::with(['productImageGalleries'])->findOr($id);
         $subCategories = SubCategory::where('category_id', $product->category_id)->get();
         $childCategories = ChildCategory::where('sub_category_id', $product->sub_category_id)->get();
         $categories = Category::where('status', 1)->get();
@@ -493,27 +446,7 @@ if ($request->has('proColor')) {
 }
 
 
-        /**============================
-         * Handle Product Customization
-         *============================*/
-        if ($request->is_customizable == 1) {
-            $customization = $product->customization ?? new ProductCustomization(['product_id' => $product->id]);
 
-            $customization->is_customizable = 1;
-
-            // Use updateImage method for front/back image
-            $customization->front_image = $this->update_image($request, 'front_image', 'uploads/customize', $customization->front_image ?? null ) ?? $customization->front_image;
-            $customization->back_image = $this->update_image($request, 'back_image', 'uploads/customize', $customization->back_image ?? null ) ?? $customization->back_image;
-
-            $customization->front_price = $request->front_price ?? 0;
-            $customization->back_price = $request->back_price ?? 0;
-            $customization->both_price = $request->both_price ?? 0;
-
-            $customization->save();
-        } else {
-            // Admin selected NO -> remove customization
-            $product->customization?->delete(); // Smart null-safe delete
-        }
 
 
         Toastr::success('Product Updated Successfully!', 'success');
@@ -543,7 +476,7 @@ if ($request->has('proColor')) {
             $this->deleteImage($image->image);
             $image->delete();
         }
-        $product->customization?->delete();
+
         $product->delete();
         return response(['status' => 'success', 'message' => 'Deleted Successfully!']);
     }

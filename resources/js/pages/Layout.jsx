@@ -1,7 +1,6 @@
-// Layout.jsx
 import Header from "../components/header/Header";
 import Footer from "../components/footer/Footer";
-import { usePage } from "@inertiajs/react";
+import { usePage, Head } from "@inertiajs/react";
 import { useCartStore } from "../stores/cartStore";
 import { useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
@@ -39,6 +38,7 @@ const Layout = ({ children }) => {
 
     return (
         <>
+            <Head title={props.settings?.site_name} />
             <Toaster />
             <Header />
             <main className="overflow-x-hidden">{children}</main>

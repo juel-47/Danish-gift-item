@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\SubCategory;
+use App\Models\ChildCategory;
 use App\Models\Color;
 use App\Models\Product;
 use App\Models\ProductReview;
@@ -79,13 +81,13 @@ class FrontendController extends Controller
                     $query->orderBy('price', 'desc');
                     break;
                 case 'latest':
-                    $query->orderBy('created_at', 'desc');
+                    $query->orderBy('id', 'desc');
                     break;
                 case 'oldest':
-                    $query->orderBy('created_at', 'asc');
+                    $query->orderBy('id', 'asc');
                     break;
                 case 'featureproduct':
-                    $query->where('product_type', 'featured_product')->orderBy('created_at', 'desc');
+                    $query->where('product_type', 'featured_product')->orderBy('id', 'desc');
                     break;
                 case 'recommended':
                     $query->withAvg('reviews', 'rating')->orderByDesc('reviews_avg_rating');
@@ -98,53 +100,56 @@ class FrontendController extends Controller
         return $query;
     }
 
-    // Helper to generate cache key
-    private function cacheKey(string $prefix, Request $request)
-    {
-        $page = $request->get('page', 1);
-        return "{$prefix}_page_{$page}_" . md5(json_encode($request->all()));
-    }
-
-    // Clear cache before fetching
-    private function clearCache(string $prefix, Request $request)
-    {
-        $key = $this->cacheKey($prefix, $request);
-        Cache::forget($key);
-    }
-
     public function allProducts(Request $request)
     {
-        $this->clearCache('all_products', $request);
-
-        $cacheKey = $this->cacheKey('all_products', $request);
-
-        $products = Cache::remember($cacheKey, 1800, function () use ($request) {
-            $query = Product::active();
-            $query = $this->applyFilters($query, $request);
-
-            if (!$request->has('sort_by')) $query->orderBy('id', 'desc');
-
-            return $query->with([
-                'category:id,name,slug',
-                'colors:id,color_name,color_code,price,is_default',
-                'sizes:id,size_name,price,is_default',
-                'customization',
-                'productImageGalleries:id,image,product_id,color_id',
-                'productImageGalleries.color:id,color_name,color_code'
+        $query = Product::active()
+            ->select([
+                'id',
+                'name',
+                'slug',
+                'price',
+                'qty',
+                'offer_price',
+                'thumb_image',
+                'category_id',
+                'sub_category_id',
+                'child_category_id'
             ])
-                ->withCount(['reviews' => fn($q) => $q->where('status', 1)])
-                ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
-                ->paginate(24)
-                ->withQueryString();
-        });
+            ->whereHas('category', function ($q) {
+                $q->where('status', 1);
+            });
+
+        $query = $this->applyFilters($query, $request);
+
+        if (!$request->has('sort_by')) {
+            $query->orderBy('id', 'desc');
+        }
+
+        $products = $query->with([
+            'category:id,name,slug'
+        ])
+            ->withCount([
+                'reviews' => fn($q) => $q->where('status', 1),
+                'colors' => fn($q) => $q->active(),
+                'sizes' => fn($q) => $q->active(),
+            ])
+            ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
+            ->paginate(20)
+            ->withQueryString();
+
+        // Static filters (Cached for 1 hour)
+        $categories = Cache::remember('all_products_categories', 3600, fn() => Category::active()->get(['id', 'name', 'slug']));
+        $brands = Cache::remember('all_products_brands', 3600, fn() => Brand::where('status', 1)->get(['id', 'name']));
+        $colors = Cache::remember('all_products_colors', 3600, fn() => Color::where('status', 1)->get(['id', 'color_name', 'color_code']));
+        $sizes = Cache::remember('all_products_sizes', 3600, fn() => Size::where('status', 1)->get(['id', 'size_name']));
 
         return Inertia::render('ProductPage', [
             'products'   => $products,
             'filters'    => $request->all(),
-            'categories' => Category::active()->get(['id', 'name', 'slug']),
-            'brands'     => Brand::all(['id', 'name']),
-            'colors'     => Color::all(['id', 'color_name', 'color_code']),
-            'sizes'      => Size::all(['id', 'size_name']),
+            'categories' => $categories,
+            'brands'     => $brands,
+            'colors'     => $colors,
+            'sizes'      => $sizes,
         ]);
     }
 
@@ -153,51 +158,169 @@ class FrontendController extends Controller
     {
         $category = Category::active()->where('slug', $slug)->firstOrFail();
 
-        $this->clearCache("category_{$category->id}", $request);
-
-        $cacheKey = $this->cacheKey("category_{$category->id}", $request);
-
-        $products = Cache::remember($cacheKey, 1800, function () use ($request, $category) {
-            $query = Product::active()->where('category_id', $category->id);
-            $query = $this->applyFilters($query, $request);
-
-            return $query->with([
-                'category:id,name,slug',
-                'colors:id,color_name,color_code,price,is_default',
-                'sizes:id,size_name,price,is_default',
-                'customization',
-                'productImageGalleries:id,image,product_id,color_id'
+        $query = Product::active()
+            ->select([
+                'id',
+                'name',
+                'slug',
+                'price',
+                'qty',
+                'offer_price',
+                'thumb_image',
+                'category_id',
+                'sub_category_id',
+                'child_category_id'
             ])
-                ->withCount(['reviews' => fn($q) => $q->where('status', 1)])
-                ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
-                ->paginate(24)
-                ->withQueryString();
-        });
+            ->where('category_id', $category->id)
+            ->whereNull('sub_category_id');
 
-        return Inertia::render('Frontend/Shop/CategoryProducts', [
+        $query = $this->applyFilters($query, $request);
+
+        if (!$request->has('sort_by')) {
+            $query->orderBy('id', 'desc');
+        }
+
+        $products = $query->with([
+            'category:id,name,slug'
+        ])
+            ->withCount([
+                'reviews' => fn($q) => $q->where('status', 1),
+                'colors' => fn($q) => $q->active(),
+                'sizes' => fn($q) => $q->active(),
+            ])
+            ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
+            ->paginate(20)
+            ->withQueryString();
+
+        // Static filters (Cached for 1 hour)
+        $brands = Cache::remember('cat_brands_' . $category->id, 3600, fn() => Brand::where('status', 1)->get(['id', 'name']));
+        $colors = Cache::remember('cat_colors', 3600, fn() => Color::where('status', 1)->get(['id', 'color_name', 'color_code']));
+        $sizes = Cache::remember('cat_sizes', 3600, fn() => Size::where('status', 1)->get(['id', 'size_name']));
+
+        return Inertia::render('CategoryPage', [
+            'type'     => 'category',
             'category' => $category,
             'products' => $products,
-            'filters' => $request->all()
+            'filters'  => $request->all(),
+            'brands'   => $brands,
+            'colors'   => $colors,
+            'sizes'    => $sizes,
         ]);
     }
 
     // Subcategory Products
     public function subcategoryProducts($slug, Request $request)
     {
-        return $this->categoryProducts($slug, $request);
+        $subcategory = SubCategory::active()->where('slug', $slug)->firstOrFail();
+
+        $query = Product::active()
+            ->select([
+                'id',
+                'name',
+                'slug',
+                'price',
+                'qty',
+                'offer_price',
+                'thumb_image',
+                'category_id',
+                'sub_category_id',
+                'child_category_id'
+            ])
+            ->where('sub_category_id', $subcategory->id)
+            ->whereNull('child_category_id');
+
+        $query = $this->applyFilters($query, $request);
+
+        if (!$request->has('sort_by')) {
+            $query->orderBy('id', 'desc');
+        }
+
+        $products = $query->with([
+            'category:id,name,slug'
+        ])
+            ->withCount([
+                'reviews' => fn($q) => $q->where('status', 1),
+                'colors' => fn($q) => $q->active(),
+                'sizes' => fn($q) => $q->active(),
+            ])
+            ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
+            ->paginate(20)
+            ->withQueryString();
+
+        // Static filters (Cached for 1 hour)
+        $brands = Cache::remember('subcat_brands_' . $subcategory->id, 3600, fn() => Brand::where('status', 1)->get(['id', 'name']));
+        $colors = Cache::remember('cat_colors', 3600, fn() => Color::where('status', 1)->get(['id', 'color_name', 'color_code']));
+        $sizes = Cache::remember('cat_sizes', 3600, fn() => Size::where('status', 1)->get(['id', 'size_name']));
+
+        return Inertia::render('CategoryPage', [
+            'type'     => 'subcategory',
+            'category' => $subcategory,
+            'products' => $products,
+            'filters'  => $request->all(),
+            'brands'   => $brands,
+            'colors'   => $colors,
+            'sizes'    => $sizes,
+        ]);
     }
 
     // Childcategory Products
     public function childcategoryProducts($slug, Request $request)
     {
-        return $this->categoryProducts($slug, $request);
+        $childcategory = ChildCategory::active()->where('slug', $slug)->firstOrFail();
+
+        $query = Product::active()
+            ->select([
+                'id',
+                'name',
+                'slug',
+                'price',
+                'qty',
+                'offer_price',
+                'thumb_image',
+                'category_id',
+                'sub_category_id',
+                'child_category_id'
+            ])
+            ->where('child_category_id', $childcategory->id);
+
+        $query = $this->applyFilters($query, $request);
+
+        if (!$request->has('sort_by')) {
+            $query->orderBy('id', 'desc');
+        }
+
+        $products = $query->with([
+            'category:id,name,slug'
+        ])
+            ->withCount([
+                'reviews' => fn($q) => $q->where('status', 1),
+                'colors' => fn($q) => $q->active(),
+                'sizes' => fn($q) => $q->active(),
+            ])
+            ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
+            ->paginate(20)
+            ->withQueryString();
+
+        // Static filters (Cached for 1 hour)
+        $brands = Cache::remember('childcat_brands_' . $childcategory->id, 3600, fn() => Brand::where('status', 1)->get(['id', 'name']));
+        $colors = Cache::remember('cat_colors', 3600, fn() => Color::where('status', 1)->get(['id', 'color_name', 'color_code']));
+        $sizes = Cache::remember('cat_sizes', 3600, fn() => Size::where('status', 1)->get(['id', 'size_name']));
+
+        return Inertia::render('CategoryPage', [
+            'type'          => 'childcategory',
+            'category'      => $childcategory,
+            'products'      => $products,
+            'filters'       => $request->all(),
+            'brands'        => $brands,
+            'colors'        => $colors,
+            'sizes'         => $sizes,
+        ]);
     }
 
     // Product Details
     public function productDetails(string $slug)
     {
         $cacheKey = "product_details_" . $slug;
-        Cache::forget($cacheKey); // Clear product detail cache
 
          $product = Cache::remember($cacheKey, 1800, function () use ($slug) {
 
@@ -233,9 +356,6 @@ class FrontendController extends Controller
                     // Sizes (ONLY name, no pivot)
                     'sizes',
                     'colors',
-
-                    // Customization (ONLY is_customizable)
-                    'customization:id,product_id,is_customizable',
                 ])
 
                 /* review */
@@ -291,7 +411,6 @@ class FrontendController extends Controller
                 'category:id,name,slug',
                 'colors:id,color_name,color_code,price,is_default',
                 'sizes:id,size_name,price,is_default',
-                'customization',
                 'productImageGalleries:id,image,product_id,color_id'
             ])
                 ->withCount(['reviews' => fn($q) => $q->where('status', 1)])

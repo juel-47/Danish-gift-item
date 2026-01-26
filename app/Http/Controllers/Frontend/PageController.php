@@ -22,10 +22,7 @@ class PageController extends Controller
             'aboutContent' => $about,
         ]);
     }
-    public function customize()
-    {
-        return Inertia::render('CustomizePage');
-    }
+
     public function handleContactForm(Request $request)
     {
         // Validate request

@@ -2,13 +2,18 @@
 import React, { useState } from 'react';
 import { router, usePage, Link } from '@inertiajs/react';
 import toast from 'react-hot-toast';
+import axios from 'axios';
+import { route } from 'ziggy-js';
+import useCartStore from '../stores/cartStore';
 import Breadcrumb from '../components/Breadcrumb';
 import ProductCard from '../components/ProductCard'; 
 import ImageZoom from "react-image-zooom";
+import Skeleton from '../components/Skeleton';
 
 const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => {
   const [imageError, setImageError] = useState({});
-  console.log(relatedProducts);
+  const [isLargeImageLoading, setIsLargeImageLoading] = useState(true);
+  // console.log(relatedProducts);
   // Data Normalization
   const normalizedProduct = {
     ...product,
@@ -50,6 +55,7 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
   const [isAdding, setIsAdding] = useState(false);
+  const [isBuying, setIsBuying] = useState(false);
 
   // Sync selection once product is loaded
   React.useEffect(() => {
@@ -87,14 +93,7 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
   }, [product.product_image_galleries]);
 
   const NoImageSkeleton = ({ className = "" }) => (
-    <div className={`w-full h-full bg-gray-200 animate-pulse flex items-center justify-center ${className}`}>
-      <div className="flex flex-col items-center gap-2 opacity-40">
-        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.587-1.587a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">No Image</span>
-      </div>
-    </div>
+    <Skeleton className={`w-full h-full ${className}`} />
   );
 
   const handleReviewSubmit = (e) => {
@@ -130,8 +129,8 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
     });
   };
 
-  const handleAddToCart = (isBuyNow = false) => {
-    if (isAdding) return;
+  const handleAddToCart = async (isBuyNow = false) => {
+    if (isAdding || isBuying) return;
     
     const selectedColorObj = derivedColors.find(c => c.color_name === selectedColor);
     const selectedSizeObj = normalizedProduct.sizes.find(s => s.size_name === selectedSize);
@@ -143,29 +142,54 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
       size_id: selectedSizeObj?.id || null,
     };
 
-    if (!isBuyNow) setIsAdding(true);
+    if (isBuyNow) {
+        setIsBuying(true);
+        // Instant store update before navigation
+        const { addItem } = useCartStore.getState();
+        addItem(product, quantity, {
+            color_id: data.color_id,
+            size_id: data.size_id,
+            color_name: selectedColor,
+            size_name: selectedSize
+        });
 
-    router.post('/cart/add', data, {
-      onStart: () => {
-        if (!isBuyNow) toast.loading('Adding to cart...', { id: 'cart-toast' });
-      },
-      onSuccess: () => {
-        if (isBuyNow) {
-          router.visit('/checkout');
-        } else {
-          setIsAdding(false);
-          toast.dismiss('cart-toast');
-        }
-      },
-      onError: (errors) => {
-        setIsAdding(false);
-        const errorMsg = Object.values(errors)[0] || 'Something went wrong';
-        toast.error(errorMsg, { id: 'cart-toast' });
-      },
-      showProgress: isBuyNow,
-      preserveScroll: true,
-      preserveState: true,
+        router.post(route('cart.add'), data, {
+            onSuccess: () => {
+                router.visit(route('checkout'));
+            },
+            onError: (errors) => {
+                setIsBuying(false);
+                const errorMsg = Object.values(errors)[0] || 'Something went wrong';
+                toast.error(errorMsg);
+            },
+            onFinish: () => {
+                // We don't necessarily need to set it to false here if we are redirecting,
+                // but for robustness if navigation fails:
+                // setIsBuying(false);
+            },
+            preserveScroll: true
+        });
+        return;
+    }
+
+    // 1. INSTANT UI FEEDBACK (Optimistic)
+    const { addItem } = useCartStore.getState();
+    addItem(product, quantity, {
+        color_id: data.color_id,
+        size_id: data.size_id,
+        color_name: selectedColor,
+        size_name: selectedSize
     });
+    toast.success("Product added to cart!", { id: 'cart-toast' });
+
+    // 2. BACKGROUND SYNC (Non-blocking)
+    try {
+        await axios.post(route('cart.add'), data);
+    } catch (error) {
+        console.error("Cart sync error:", error);
+        const errorMsg = error.response?.data?.message || "Failed to sync cart";
+        toast.error(errorMsg, { id: 'cart-toast' });
+    }
   };
 
   const handleBuyNow = () => {
@@ -188,14 +212,20 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 xl:gap-12">
           {/* Gallery */}
           <div className="space-y-4">
-            <div className="bg-white rounded-xl overflow-hidden border border-gray shadow-sm aspect-square">
+            <div className="bg-white rounded-xl overflow-hidden border border-gray shadow-sm aspect-square relative">
               {currentImageUrl && !imageError[selectedImage] ? (
-                <ImageZoom
-                  src={currentImageUrl}  
-                  alt={`${normalizedProduct.name} - ${selectedColor}`}
-                  zoom="200"   
-                  className="w-full h-full object-contain"
-                />
+                <>
+                  {isLargeImageLoading && (
+                    <Skeleton className="absolute inset-0 z-10" />
+                  )}
+                  <ImageZoom
+                    src={currentImageUrl}  
+                    alt={`${normalizedProduct.name} - ${selectedColor}`}
+                    zoom="200"   
+                    onLoad={() => setIsLargeImageLoading(false)}
+                    className={`w-full h-full object-contain ${isLargeImageLoading ? 'opacity-0' : 'opacity-100'}`}
+                  />
+                </>
               ) : (
                 <NoImageSkeleton />
               )}
@@ -206,7 +236,10 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
                 <button
                   key={idx}
                   onClick={() => {
-                    setSelectedImage(idx);
+                    if (selectedImage !== idx) {
+                        setIsLargeImageLoading(true);
+                        setSelectedImage(idx);
+                    }
                     // Sync color if this image has a color associated
                     const galleryItem = product.product_image_galleries?.[idx];
                     if (galleryItem && galleryItem.color_id) {
@@ -422,15 +455,20 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
                 </button>
                 <button
                   onClick={handleBuyNow}
-                  disabled={normalizedProduct.stock <= 0}
+                  disabled={isBuying || normalizedProduct.stock <= 0}
                   className={`
                     flex-1 border-2 py-4 rounded-lg font-bold text-lg active:scale-95 transition-all duration-200
+                    flex items-center justify-center gap-2
                     ${normalizedProduct.stock <= 0
                       ? "border-gray-300 text-gray-400 cursor-not-allowed"
                       : "border-red text-red hover:bg-red-50"}
                   `}
                 >
-                  Buy Now
+                  {isBuying ? (
+                    <span className="w-6 h-6 border-3 border-red/30 border-t-red rounded-full animate-spin" />
+                  ) : (
+                    "Buy Now"
+                  )}
                 </button>
               </div>
 

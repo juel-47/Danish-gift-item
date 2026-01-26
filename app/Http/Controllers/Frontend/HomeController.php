@@ -18,14 +18,21 @@ class HomeController extends Controller
             return Slider::active()
                 ->orderBy('serial', 'asc')
                 ->select('id', 'banner', 'title', 'btn_url', 'type')
-                ->get(['id', 'banner', 'title', 'btn_url', 'type']);
+                ->get();
         });
-        $categories = $this->categories();
+
+        $categories = Cache::remember('home_categories', 1800, function() {
+            return $this->categories();
+        });
 
         // dd($categories);
-        $homeProducts = $this->homeProducts();
+        $homeProducts = Cache::remember('home_products', 1800, function() {
+            return $this->homeProducts();
+        });
 
-        $typeBaseProducts = $this->getTypeBaseProduct();
+        $typeBaseProducts = Cache::remember('type_base_products', 1800, function() {
+            return $this->getTypeBaseProduct();
+        });
         return Inertia::render('Home',  [
             'categories' => $categories,
             'sliders' => $sliders,
@@ -54,6 +61,7 @@ class HomeController extends Controller
             ->orderBy('id', 'asc')
             ->with(['products' => function ($q) {
                 $q->active()
+                    ->whereNull('sub_category_id')
                     ->select(
                         'id',
                         'name',

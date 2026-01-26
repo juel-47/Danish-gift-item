@@ -39,7 +39,7 @@ const Header = () => {
         { label: "HOME", path: "/", icon: Home },
         {
             label: "PRODUCTS",
-            path: "/products",
+            path: "/all-products",
             hasMegaMenu: true,
             icon: ShoppingBag,
             categories: dynamicCategories
@@ -80,6 +80,7 @@ const Header = () => {
                                 >
                                     <Link
                                         href={item.path || "#"}
+                                        prefetch
                                         className={`
                                             flex items-center cursor-pointer gap-2 py-4 text-gray-800 font-medium text-sm uppercase tracking-wide
                                             ${item.hasMegaMenu ? "cursor-default" : "hover:text-red-600"}
@@ -104,23 +105,24 @@ const Header = () => {
                                                 grid grid-cols-12 gap-0 overflow-hidden
                                             "
                                         >
-                                            {/* Left - Categories list */}
                                             <div className="col-span-4 bg-gray-50 py-6 px-4">
                                                 {item.categories.map((cat) => (
-                                                    <div
-                                                        key={cat.title}
-                                                        className={`
-                                                            flex items-center gap-3 py-3 px-4 cursor-pointer rounded-md transition-colors
-                                                            ${activeCategory === cat.title
-                                                                ? "bg-white text-red-600 font-medium shadow-sm"
-                                                                : "hover:bg-white text-gray-700"
-                                                            }
-                                                        `}
-                                                        onMouseEnter={() => setActiveCategory(cat.title)}
-                                                    >
-                                                        {cat.icon && <cat.icon size={18} />}
-                                                        {cat.title}
-                                                    </div>
+                                                        <Link 
+                                                            key={cat.title}
+                                                            href={`/category/${cat.slug}`}
+                                                            prefetch
+                                                            className={`
+                                                                flex items-center gap-3 py-3 px-4 cursor-pointer rounded-md transition-colors
+                                                                ${activeCategory === cat.title
+                                                                    ? "bg-white text-red-600 font-medium shadow-sm"
+                                                                    : "hover:bg-white text-gray-700"
+                                                                }
+                                                            `}
+                                                            onMouseEnter={() => setActiveCategory(cat.title)}
+                                                        >
+                                                            {cat.icon && <cat.icon size={18} />}
+                                                            {cat.title}
+                                                        </Link>
                                                 ))}
                                             </div>
 
@@ -138,7 +140,8 @@ const Header = () => {
                                                                 >
                                                                     <div className="font-semibold text-gray-900 mb-2 border-b border-gray-200 pb-1">
                                                                         <Link 
-                                                                            href={`/category/${subItem.slug}`}
+                                                                            href={`/subcategory/${subItem.slug}`}
+                                                                            prefetch
                                                                             onClick={() => setActiveCategory(null)}
                                                                         >
                                                                             {subItem.name}
@@ -147,7 +150,8 @@ const Header = () => {
                                                                     {subItem.sub?.map((child, childIdx) => (
                                                                         <Link
                                                                             key={childIdx}
-                                                                            href={`/category/${child.slug}`}
+                                                                            href={`/childcategory/${child.slug}`}
+                                                                            prefetch
                                                                             className="block py-1.5 text-gray-600 hover:text-red-600 text-sm pl-1"
                                                                             onClick={() => setActiveCategory(null)}
                                                                         >
@@ -256,7 +260,7 @@ const Header = () => {
                                                                         <div key={subIdx}>
                                                                             <div className="font-medium text-gray-800 py-2">
                                                                                 <Link
-                                                                                    href={`/category/${subItem.slug}`}
+                                                                                    href={`/subcategory/${subItem.slug}`}
                                                                                     onClick={() => setIsMobileOpen(false)}
                                                                                 >
                                                                                     {subItem.name}
@@ -266,7 +270,7 @@ const Header = () => {
                                                                                 (child, childIdx) => (
                                                                                     <Link
                                                                                         key={childIdx}
-                                                                                        href={`/category/${child.slug}`}
+                                                                                        href={`/childcategory/${child.slug}`}
                                                                                         className="block py-1.5 pl-4 text-gray-600 hover:text-red-600 text-sm"
                                                                                         onClick={() =>
                                                                                             setIsMobileOpen(false)

@@ -11,7 +11,7 @@ import "swiper/css/autoplay";
 
 
 const HeroSlider = ({sliders}) => {
-  console.log(sliders);
+  // console.log(sliders);
   return (
     <div className="relative w-full overflow-hidden">
       {/* হাইট রেসপন্সিভ করা হয়েছে */}

@@ -127,7 +127,6 @@ class FrontendProductController extends Controller
         $products = $query->with([
             'category',
             'colors',
-            'customization',
             'sizes',
             'productImageGalleries:id,image,product_id,color_id',
             'productImageGalleries.color:id,color_name,color_code'
@@ -151,7 +150,7 @@ class FrontendProductController extends Controller
         $query = Product::active()->where('category_id', $category->id);
         $query = $this->applyFilters($query, $request);
 
-        $products = $query->with(['category', 'colors', 'customization', 'sizes'])
+        $products = $query->with(['category', 'colors', 'sizes'])
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
             ->paginate(24);
@@ -174,7 +173,7 @@ class FrontendProductController extends Controller
         $query = Product::active()->where('sub_category_id', $subcategory->id);
         $query = $this->applyFilters($query, $request);
 
-        $products = $query->with(['category', 'colors', 'customization', 'sizes'])
+        $products = $query->with(['category', 'colors', 'sizes'])
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
             ->paginate(24);
@@ -197,7 +196,7 @@ class FrontendProductController extends Controller
         $query = Product::active()->where('child_category_id', $childcategory->id);
         $query = $this->applyFilters($query, $request);
 
-        $products = $query->with(['category', 'colors', 'customization', 'sizes'])
+        $products = $query->with(['category', 'colors', 'sizes'])
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
             ->paginate(24);
@@ -218,7 +217,6 @@ class FrontendProductController extends Controller
             'category:id,name,slug,image,icon',
             'productImageGalleries:id,image,product_id,color_id',
             'productImageGalleries.color:id,color_name,color_code',
-            'customization',
             // 'colors' => fn($q) => $q->select('colors.id as color_id', 'colors.color_name', 'colors.color_code', 'colors.price', 'colors.is_default')->withPivot('product_id', 'id'),
             'sizes' => fn($q) => $q->select('sizes.id as size_id', 'sizes.size_name', 'sizes.price', 'sizes.is_default')->withPivot('product_id', 'id'),
             'brand:id,name,slug,logo'
@@ -253,7 +251,7 @@ class FrontendProductController extends Controller
         $query = Product::active();
         $query = $this->applyFilters($query, $request);
 
-        $products = $query->with(['category', 'colors', 'customization', 'sizes'])
+        $products = $query->with(['category', 'colors', 'sizes'])
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
             ->paginate(20);

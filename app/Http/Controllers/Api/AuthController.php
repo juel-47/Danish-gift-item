@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Mail\ResetPasswordMail;
 use App\Models\Cart;
 use App\Models\Customer;
-use App\Models\customerCustomization;
 use App\Models\User;
 use App\Notifications\CustomVerifyEmail;
 use Carbon\Carbon;
@@ -347,7 +346,6 @@ class AuthController extends Controller
         $sessionId = $request->cookie('cart_session');
         if ($sessionId) {
             $this->mergeGuestCartToUser($customer->id, $sessionId);
-            $this->mergeGuestCustomizationToUser($customer->id, $sessionId);
         }
 
         // ===== Prepare response =====
@@ -392,47 +390,7 @@ class AuthController extends Controller
         }
     }
 
-    private function mergeGuestCustomizationToUser($userId, $sessionId)
-    {
-        $guestCustomizations = CustomerCustomization::where('session_id', $sessionId)->get();
 
-        foreach ($guestCustomizations as $custom) {
-            $existing = CustomerCustomization::where('user_id', $userId)
-                ->where('product_id', $custom->product_id)
-                ->first();
-
-            if ($existing) {
-                $oldData = json_decode($existing->custom_data, true) ?? [];
-                $newData = json_decode($custom->custom_data, true) ?? [];
-                $mergedData = array_merge($oldData, $newData);
-
-                $frontImage = $custom->front_image ?: $existing->front_image;
-                $backImage  = $custom->back_image ?: $existing->back_image;
-
-                // Remove replaced images
-                if ($custom->front_image && $existing->front_image && file_exists(public_path($existing->front_image))) {
-                    @unlink(public_path($existing->front_image));
-                }
-                if ($custom->back_image && $existing->back_image && file_exists(public_path($existing->back_image))) {
-                    @unlink(public_path($existing->back_image));
-                }
-
-                $existing->update([
-                    'custom_data' => json_encode($mergedData),
-                    'front_image' => $frontImage,
-                    'back_image' => $backImage,
-                    'price' => $custom->price ?: $existing->price,
-                ]);
-
-                $custom->delete();
-            } else {
-                $custom->update([
-                    'user_id' => $userId,
-                    'session_id' => null,
-                ]);
-            }
-        }
-    }
 
 
     /**

@@ -63,7 +63,7 @@
               </div>
               <div class="row">
                 <div class="form-group col-md-4">
-                  <label>Purchase Price <code>*</code></label>
+                  <label>Purchase Price </label>
                   <input type="text" class="form-control" name="purchase_price" value="{{ old('purchase_price') }}">
                 </div>
                 <div class="form-group col-md-4">
@@ -241,44 +241,6 @@
 
     {{-- <hr> --}}
 
-    <hr>
-    <h5>🔧 Product Customization</h5>
-
-    <div class="form-group">
-      <label>Is Customizable?</label>
-      <select name="is_customizable" id="is_customizable" class="form-control">
-        <option value="0">No</option>
-        <option value="1">Yes</option>
-      </select>
-    </div>
-
-    <div id="customize_section" style="display: none;">
-      <div class="row">
-        <div class="form-group col-md-6">
-          <label>Front Side Customize Image</label>
-          <input type="file" name="front_image" class="form-control">
-        </div>
-        <div class="form-group col-md-6">
-          <label>Back Side Customize Image</label>
-          <input type="file" name="back_image" class="form-control">
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="form-group col-md-4">
-          <label>Front Side Extra Cost</label>
-          <input type="number" name="front_price" step="0.01" class="form-control" placeholder="0.00">
-        </div>
-        <div class="form-group col-md-4">
-          <label>Back Side Extra Cost</label>
-          <input type="number" name="back_price" step="0.01" class="form-control" placeholder="0.00">
-        </div>
-        <div class="form-group col-md-4">
-          <label>Both Side Extra Cost</label>
-          <input type="number" name="both_price" step="0.01" class="form-control" placeholder="0.00">
-        </div>
-      </div>
-    </div>
     <hr>
     <button type="submit" class="btn btn-primary mt-3">Create</button>
     </form>
@@ -484,16 +446,8 @@ $(document).ready(function() {
   });
 });
 </script>
-<script>
-// Show/Hide customize section
-document.getElementById('is_customizable').addEventListener('change', function() {
-  if (this.value == 1) {
-    document.getElementById('customize_section').style.display = 'block';
-  } else {
-    document.getElementById('customize_section').style.display = 'none';
-  }
-});
 </script>
+
 
 <script>
 // ADD MORE BUTTON

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Mail\ResetPasswordMail;
 use App\Models\Cart;
 use App\Models\Customer;
-use App\Models\customerCustomization;
 use App\Notifications\CustomVerifyEmail;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -91,7 +90,6 @@ class AuthController extends Controller
 
         // ✅ MERGE using OLD session id
         $this->mergeGuestCartToUser($customer->id, $oldSessionId);
-        $this->mergeGuestCustomizationToUser($customer->id, $oldSessionId);
 
         return redirect()->intended(route('home'))
             ->with('success', 'Welcome back, ' . $customer->name . '!');
@@ -226,7 +224,6 @@ class AuthController extends Controller
                 ->where('product_id', $item->product_id)
                 ->where('options->size_id', $item->options['size_id'] ?? null)
                 ->where('options->color_id', $item->options['color_id'] ?? null)
-                ->where('options->customization_id', $item->options['customization_id'] ?? null)
                 ->first();
 
             if ($existing) {
@@ -235,51 +232,6 @@ class AuthController extends Controller
                 $item->delete();
             } else {
                 $item->update([
-                    'user_id' => $userId,
-                    'session_id' => null,
-                ]);
-            }
-        }
-    }
-
-    private function mergeGuestCustomizationToUser($userId, $sessionId)
-    {
-        $guestCustomizations = customerCustomization::where('session_id', $sessionId)->get();
-
-        foreach ($guestCustomizations as $custom) {
-            $existing = customerCustomization::where('user_id', $userId)
-                ->where('product_id', $custom->product_id)
-                ->first();
-
-            if ($existing) {
-                // Merge logic same as before
-                $oldData = json_decode($existing->custom_data, true) ?? [];
-                $newData = json_decode($custom->custom_data, true) ?? [];
-                $mergedData = array_merge($oldData, $newData);
-
-                $frontImage = $custom->front_image ?: $existing->front_image;
-                $backImage  = $custom->back_image ?: $existing->back_image;
-
-                // Delete old images if replaced
-                if ($custom->front_image && $existing->front_image && file_exists(public_path($existing->front_image))) {
-                    @unlink(public_path($existing->front_image));
-                }
-                if ($custom->back_image && $existing->back_image && file_exists(public_path($existing->back_image))) {
-                    @unlink(public_path($existing->back_image));
-                }
-
-                $existing->update([
-                    'custom_data' => json_encode($mergedData),
-                    'front_image' => $frontImage,
-                    'back_image' => $backImage,
-                    'price' => $custom->price ?: $existing->price,
-                    'user_id' => $userId,
-                    'session_id' => null,
-                ]);
-
-                $custom->delete();
-            } else {
-                $custom->update([
                     'user_id' => $userId,
                     'session_id' => null,
                 ]);

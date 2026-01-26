@@ -5,7 +5,6 @@ use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CheckOutController;
 use App\Http\Controllers\Api\CustomerAddressController;
-use App\Http\Controllers\Api\CustomerCustomizationController;
 use App\Http\Controllers\Api\FooterController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -86,8 +85,6 @@ use App\Http\Controllers\Api\UserDashboardController;
 //     Route::get('childcategory/{slug}', [FrontendProductController::class, 'childcategoryProducts'])->name('childcategory.products');
 //     //all products
 //     Route::get('all-products', [FrontendProductController::class, 'allProducts'])->name('all.products');
-//     // Customer customization fetch for a product
-//     // Route::get('product-customize/{slug}', [CustomerCustomizationController::class, 'getCustomization']);
 
 
 //     Route::get('checkout', [CheckOutController::class, 'index'])->name('checkout');
@@ -195,10 +192,6 @@ use App\Http\Controllers\Api\UserDashboardController;
 
 
 
-//     // Store or update customer customization
-//     Route::post('product-customize', [CustomerCustomizationController::class, 'storeOrUpdate'])->name('product-customize.store');
-
-//     // Serve uploaded images with CORS 
 //     Route::get('/uploads/customizations/{filename}', function ($filename) {
 //         $path = public_path('uploads/customizations/' . $filename);
 //         if (!file_exists($path)) abort(404);

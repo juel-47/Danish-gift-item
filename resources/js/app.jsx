@@ -32,6 +32,7 @@ import { createRoot } from "react-dom/client";
 import Layout from "./pages/Layout";
 
 createInertiaApp({
+    title: (title) => title ? `${title}` : 'Danish Gift',
     resolve: (name) => {
         const pages = import.meta.glob("./pages/**/*.jsx", { eager: true });
         let page = pages[`./pages/${name}.jsx`];
@@ -46,6 +47,11 @@ createInertiaApp({
         return page;
     },
 
+    progress: {
+        color: '#EF4444', // Red to match site theme
+        showSpinner: true,
+    },
+
     setup({ el, App, props }) {
         createRoot(el).render(
             <>
@@ -55,20 +61,3 @@ createInertiaApp({
         );
     },
 });
-
-//only for test
-
-// import { createRoot } from 'react-dom/client'
-// import { createInertiaApp } from '@inertiajs/react'
-
-// import './bootstrap'
-// import '../css/app.css'
-
-// createInertiaApp({
-//   resolve: async (name) => {
-//     return (await import(`./Pages/${name}.jsx`)).default
-//   },
-//   setup({ el, App, props }) {
-//     createRoot(el).render(<App {...props} />)
-//   },
-// })

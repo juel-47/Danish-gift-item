@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 
 const CartPage = () => {
   const { cart_items, total: serverTotal, settings, promotions = [] } = usePage().props;
-  const { cartItems, total, setCart, increment, decrement, remove } = useCartStore();
+  const { cartItems, total, setCart, increment, decrement, remove, clearCart } = useCartStore();
 
   // Initialize cart store with server data
   useEffect(() => {
@@ -32,10 +32,14 @@ const CartPage = () => {
 
   // Remove item
   const handleRemove = (id) => {
-    if (confirm('Are you sure you want to remove this item?')) {
-      remove(id);
-      toast.success("Product removed from cart");
-    }
+    remove(id);
+    toast.success("Product removed from cart", { id: 'cart-page-toast' });
+  };
+
+  // Clear entire cart
+  const handleClearCart = () => {
+      clearCart();
+      toast.success("Cart cleared", { id: 'cart-page-toast' });
   };
 
   const subtotal = total || 0;
@@ -52,9 +56,18 @@ const CartPage = () => {
             <ShoppingBag size={32} className="text-red" />
             Your Cart
           </h1>
-          <span className="text-lg text-gray-600">
-            {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}
-          </span>
+          <div className="flex items-center gap-6">
+            <span className="text-lg text-gray-600 hidden sm:block">
+                {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}
+            </span>
+            <button 
+                onClick={handleClearCart}
+                className="text-red hover:text-red-700 font-medium flex items-center gap-2 transition-colors border-b border-transparent hover:border-red"
+            >
+                <Trash2 size={18} />
+                <span>Clear All</span>
+            </button>
+          </div>
         </div>
 
         {cartItems.length === 0 ? (

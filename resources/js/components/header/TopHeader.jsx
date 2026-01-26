@@ -4,9 +4,11 @@ import { Search, User, ShoppingCart } from "lucide-react";
 import { IoCart } from "react-icons/io5";
 import { FaUser } from "react-icons/fa";
 import { Link, usePage } from "@inertiajs/react";
+import useCartStore from "../../stores/cartStore";
 
 const TopHeader = () => {
   const { auth, cart } = usePage().props;
+  const { cartCount } = useCartStore();
 
   return (
     <header className="bg-[#A60A07] text-white sticky top-0 z-50 shadow-md">
@@ -83,9 +85,9 @@ const TopHeader = () => {
               aria-label="Shopping cart"
             >
               <IoCart size={32} />
-              {cart?.count > 0 && (
+              {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-white text-[#A60A07] text-xs font-bold rounded-full px-1.5 min-w-[1.2rem] h-5 flex items-center justify-center border border-[#A60A07]">
-                  {cart.count}
+                  {cartCount}
                 </span>
               )}
             </Link>

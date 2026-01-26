@@ -3,7 +3,6 @@
 use App\Http\Controllers\Frontend\AuthController;
 use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\Frontend\CheckOutController;
-use App\Http\Controllers\Frontend\CustomerCustomizationController;
 use App\Http\Controllers\Frontend\FooterController;
 use App\Http\Controllers\Frontend\FrontendController;
 use App\Http\Controllers\Frontend\HomeController;
@@ -79,11 +78,9 @@ Route::get('/email/verify/{id}', [AuthController::class, 'verifyEmail'])
 Route::get('product-details/{slug}', [FrontendController::class, 'productDetails'])
     ->name('product-details');
 Route::get('all-products', [FrontendController::class, 'allProducts'])->name('all.products');
-
-Route::get('/product-customize/{productId}', [CustomerCustomizationController::class, 'customizeProduct'])
-    ->name('product-customize');
-
-Route::post('product-customize', [CustomerCustomizationController::class, 'storeOrUpdate'])->name('product-customize.store');
+Route::get('category/{slug}', [FrontendController::class, 'categoryProducts'])->name('category.products');
+Route::get('subcategory/{slug}', [FrontendController::class, 'subcategoryProducts'])->name('subcategory.products');
+Route::get('childcategory/{slug}', [FrontendController::class, 'childcategoryProducts'])->name('childcategory.products');
 
 //cart controller 
 
@@ -121,7 +118,6 @@ Route::get('/order/success', [CheckOutController::class, 'success'])
 // page routes 
 Route::controller(PageController::class)->group(function () {
     Route::get('/about', 'about')->name('about');
-    Route::get('/customize', 'customize')->name('customize');
     Route::get('/contact', 'branch')->name('contact');
     Route::post('/contact', 'handleContactForm')->name('contact-form.submit');
 });
