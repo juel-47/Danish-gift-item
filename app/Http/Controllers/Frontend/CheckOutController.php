@@ -38,8 +38,10 @@ class CheckOutController extends Controller
         ]);
     }
 
-    public function success()
+    public function success($order_id = null)
     {
-        return Inertia::render('OrderSuccessPage');
+        return Inertia::render('OrderSuccessPage', [
+            'order_id' => $order_id
+        ]);
     }
 }

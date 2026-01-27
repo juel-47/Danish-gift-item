@@ -136,7 +136,7 @@ class AuthController extends Controller
     // Forgot Password Page
     public function showForgotPassword()
     {
-        return Inertia::render('ForgetPassword');
+        return Inertia::render('ForgotPasswordPage');
     }
 
     public function forgotPassword(Request $request)
@@ -242,7 +242,7 @@ class AuthController extends Controller
     {
         // dd($request->all());
         $email = $request->query('email');
-        return Inertia::render('ResendEamil', [
+        return Inertia::render('ResendEmail', [
             'email' => $email
         ]);
     }

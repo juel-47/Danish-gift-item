@@ -1,21 +1,96 @@
 // CartPage.jsx
-// CartPage.jsx
-import React, { useEffect } from 'react';
-import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag } from 'lucide-react';
-import { usePage } from '@inertiajs/react';
+import React, { useEffect, useState } from 'react';
+import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, CreditCard, Truck, CheckCircle } from 'lucide-react';
+import { usePage, useForm, Link } from '@inertiajs/react';
 import { useCartStore } from "../stores/cartStore";
 import toast from "react-hot-toast";
 
 const CartPage = () => {
-  const { cart_items, total: serverTotal, settings, promotions = [] } = usePage().props;
+  const { cart_items, total: serverTotal, settings, promotions = [], shipping_methods = [], pickup_methods = [], countries = [], customer_addresses = [] } = usePage().props;
   const { cartItems, total, setCart, increment, decrement, remove, clearCart } = useCartStore();
+
 
   // Initialize cart store with server data
   useEffect(() => {
-    setCart(cart_items ?? [], serverTotal ?? 0);
-  }, [cart_items, serverTotal]);
+    setCart(cart_items ?? []);
+    // If cart has items and user wants to checkout immediately, we could toggle this.
+    // For now, let's keep it as a separate step or just show it below.
+  }, [cart_items]);
 
-  // Increment quantity
+  // Checkout Form Logic
+  const { data, setData, post, processing, errors, transform } = useForm({
+    // UI Fields
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    street_address: '',
+    city: '',
+    zip_code: '',
+    country: 'Denmark',
+    
+    // Selection
+    shipping_method_id: '',
+    payment_method: 'paypal', 
+    
+    // Internal storage for full objects required by backend
+    shipping_method_obj: null,
+  });
+
+  const [selectedShippingCost, setSelectedShippingCost] = useState(0);
+
+  // Pre-fill address
+  useEffect(() => {
+      if (customer_addresses && customer_addresses.length > 0) {
+          const defaultAddress = customer_addresses.find(a => a.is_default) || customer_addresses[0];
+          setData(prev => ({
+              ...prev,
+              first_name: defaultAddress.first_name || '',
+              last_name: defaultAddress.last_name || '',
+              email: defaultAddress.email || '',
+              phone: defaultAddress.phone || '',
+              street_address: defaultAddress.address || '',
+              city: defaultAddress.city || '',
+              zip_code: defaultAddress.zip_code || '',
+              country: defaultAddress.country || 'Denmark',
+          }));
+      }
+  }, [customer_addresses]);
+
+  // Transform data before submit
+  transform((data) => ({
+      payment_method: data.payment_method,
+      shipping_method: data.shipping_method_obj,
+      shipping_address: {
+          address: data.street_address,
+          city: data.city,
+          zip_code: data.zip_code,
+          country: data.country
+      },
+      personal_info: {
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email,
+          phone: data.phone
+      }
+  }));
+
+  const handleShippingChange = (method) => {
+      setSelectedShippingCost(Number(method.cost));
+      setData(data => ({
+          ...data,
+          shipping_method_id: method.id,
+          shipping_method_obj: method
+      }));
+  };
+
+  const handleCheckoutSubmit = (e) => {
+      e.preventDefault();
+      post(route('checkout.store'));
+  };
+
+
+  // Cart Actions
   const handlePlus = (id, currentQty, availableStock) => {
     if (currentQty >= availableStock) {
       toast.warn(`Only ${availableStock} item(s) available`);
@@ -24,27 +99,28 @@ const CartPage = () => {
     increment(id, availableStock);
   };
 
-  // Decrement quantity
   const handleMinus = (id, currentQty) => {
     if (currentQty <= 1) return;
     decrement(id);
   };
 
-  // Remove item
   const handleRemove = (id) => {
     remove(id);
     toast.success("Product removed from cart", { id: 'cart-page-toast' });
   };
 
-  // Clear entire cart
   const handleClearCart = () => {
       clearCart();
       toast.success("Cart cleared", { id: 'cart-page-toast' });
   };
 
   const subtotal = total || 0;
-  const shipping = subtotal > 100 ? 0 : 12.90;
-  const finalTotal = Number(subtotal) + Number(shipping);
+  // Shipping logic is now handled by selectedShippingCost in the form
+  // Only show generic shipping estimate if NOT in checkout mode?
+  // Actually, let's use selectedShippingCost for the total calculation if checkout is active.
+  
+  const finalTotal = Number(subtotal) + Number(selectedShippingCost);
+
 
   return (
     <div className="min-h-screen bg-gray py-8 px-4 sm:px-6 lg:px-8">
@@ -53,20 +129,22 @@ const CartPage = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <ShoppingBag size={32} className="text-red" />
+            <ShoppingBag size={32} className="text-[var(--color-red)]" />
             Your Cart
           </h1>
           <div className="flex items-center gap-6">
             <span className="text-lg text-gray-600 hidden sm:block">
                 {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}
             </span>
-            <button 
-                onClick={handleClearCart}
-                className="text-red hover:text-red-700 font-medium flex items-center gap-2 transition-colors border-b border-transparent hover:border-red"
-            >
-                <Trash2 size={18} />
-                <span>Clear All</span>
-            </button>
+            {cartItems.length > 0 && (
+                <button 
+                    onClick={handleClearCart}
+                    className="text-[var(--color-red)] hover:text-red-700 font-medium flex items-center gap-2 transition-colors border-b border-transparent hover:border-[var(--color-red)]"
+                >
+                    <Trash2 size={18} />
+                    <span>Clear All</span>
+                </button>
+            )}
           </div>
         </div>
 
@@ -74,8 +152,9 @@ const CartPage = () => {
           <EmptyCart />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Cart Items */}
-            <div className="lg:col-span-8">
+            {/* Left Column: Cart Items + (Optional) Checkout Form */}
+            <div className="lg:col-span-8 space-y-8">
+              {/* Cart Items List */}
               <div className="bg-white rounded-xl shadow-sm border border-[var(--color-gray)] overflow-hidden">
                 {cartItems.map((item) => (
                   <div
@@ -135,7 +214,7 @@ const CartPage = () => {
 
                         <button
                           onClick={() => handleRemove(item.id)}
-                          className="hidden sm:flex items-center gap-1.5 text-gray-500 hover:text-red transition"
+                          className="hidden sm:flex items-center gap-1.5 text-gray-500 hover:text-[var(--color-red)] transition"
                         >
                           <Trash2 size={18} />
                           <span className="text-sm">Remove</span>
@@ -146,18 +225,11 @@ const CartPage = () => {
                 ))}
               </div>
 
-              <div className="mt-6">
-                <a
-                  href={route('all.products')}
-                  className="inline-flex items-center gap-2 text-gray-600 hover:text-red transition"
-                >
-                  <ArrowLeft size={18} />
-                  Continue Shopping
-                </a>
-              </div>
+
+
             </div>
 
-            {/* Order Summary */}
+            {/* Order Summary Right Column */}
             <div className="lg:col-span-4">
               <div className="bg-white rounded-xl shadow-sm border border-gray p-6 sticky top-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">
@@ -167,29 +239,33 @@ const CartPage = () => {
                 <div className="space-y-4">
                   <div className="flex justify-between text-gray-600">
                     <span>Subtotal ({cartItems.length} items)</span>
-                    <span>{settings?.currency_icon || '€'}{total}</span>
+                    <span>{settings?.currency_icon || '€'}{(Number(subtotal) || 0).toFixed(2)}</span>
                   </div>
+                  
                   <div className="flex justify-between text-gray-600">
                     <span>Shipping</span>
-                    <span>{shipping === 0 ? 'FREE' : `${settings?.currency_icon || '€'}${shipping}`}</span>
+                    <span>Calculated at checkout</span>
                   </div>
+                  
                   <div className="border-t border-[var(--color-gray)] pt-4 mt-2">
                     <div className="flex justify-between text-lg font-bold text-gray-900">
                       <span>Total</span>
-                      <span>{settings?.currency_icon || '€'}{finalTotal}</span>
+                      <span>{settings?.currency_icon || '€'}{(Number(subtotal) || 0).toFixed(2)}</span>
                     </div>
                     <p className="text-sm text-gray-500 mt-1">
-                      Including VAT & shipping
+                      Including VAT
                     </p>
                   </div>
                 </div>
 
-                <button 
-                  onClick={() => router.get(route('checkout'))}
-                  className="w-full mt-8 bg-red text-white py-4 rounded-lg font-medium hover:bg-red-800 transition duration-200 shadow-md"
-                >
-                  Proceed to Checkout
-                </button>
+                <div className="mt-6">
+                    <Link
+                      href={route('checkout')}
+                      className="block w-full text-center bg-[var(--color-red)] text-white py-4 rounded-lg font-medium hover:bg-red-800 transition duration-200 shadow-md"
+                    >
+                      Proceed to Checkout
+                    </Link>
+                </div>
 
                 <div className="mt-6 text-center text-sm text-gray-500">
                   Secure checkout • Free returns within 30 days
@@ -210,12 +286,12 @@ const EmptyCart = () => (
     <p className="text-gray-600 mb-8 max-w-md mx-auto">
       Looks like you haven't added anything yet. Let's change that!
     </p>
-    <a
+    <Link
       href={route('all.products')}
-      className="inline-block bg-red text-white px-8 py-4 rounded-lg font-medium hover:bg-red-800 transition"
+      className="inline-block bg-[var(--color-red)] text-white px-8 py-4 rounded-lg font-medium hover:bg-red-800 transition"
     >
       Start Shopping
-    </a>
+    </Link>
   </div>
 );
 

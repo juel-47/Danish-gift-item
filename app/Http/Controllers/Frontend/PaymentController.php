@@ -51,7 +51,7 @@ class PaymentController extends Controller
                 }
 
                 if (($data['status'] ?? null) === 'success') {
-                    return redirect()->route('order.success');
+                    return redirect()->route('order.success', ['order_id' => $data['order_id'] ?? null]);
                 }
 
                 return redirect()->back()->withErrors([
@@ -162,6 +162,7 @@ class PaymentController extends Controller
             'status' => 'success',
             'message' => 'Order placed successfully!',
             'order_id' => $order->id,
+            'redirect_url' => route('order.success', ['order_id' => $order->id]),
             'shipping_method' => $shippingMethod
         ]);
     }
@@ -199,8 +200,8 @@ class PaymentController extends Controller
         $response = $provider->createOrder([
             "intent" => "CAPTURE",
             "application_context" => [
-                "return_url" => route('api.v1.paypal-success'),
-                "cancel_url" => route('api.v1.paypal-cancel')
+                "return_url" => route('paypal.success'),
+                "cancel_url" => route('paypal.cancel')
             ],
             "purchase_units" => [
                 [
@@ -239,8 +240,7 @@ class PaymentController extends Controller
 
             $total = $this->calculateCartTotal($cartItems, $request->shipping_method, $request->coupon ?? null);
             $order = $this->storeOrder('Paypal', 1, $response['id'], $total, $request, null, false, $personalInfo);
-
-            return response()->json(['status' => 'success', 'order_id' => $order->id]);
+            return redirect()->route('order.success', ['order_id' => $order->id]);
         }
 
         return response()->json(['status' => 'error', 'message' => 'Paypal payment failed!'], 400);
@@ -341,7 +341,7 @@ class PaymentController extends Controller
         $total = $this->calculateCartTotal($cartItems, $request->shipping_method, $request->coupon ?? null);
         $order = $this->storeOrder('Payoneer', 1, $transactionId, $total, $request, null, false, $personalInfo);
 
-        return response()->json(['status' => 'success', 'message' => 'Payment completed successfully!', 'order_id' => $order->id]);
+        return redirect()->route('order.success', ['order_id' => $order->id]);
     }
 
     public function payoneerCancel()
@@ -384,7 +384,7 @@ class PaymentController extends Controller
             "merchantInfo" => ["merchantSerialNumber" => $config['merchant_serial_number']],
             "customerInfo" => ["mobileNumber" => $request->user()['phone'] ?? '4520000000'],
             "transaction" => ["orderId" => $orderId, "amount" => $amount, "transactionText" => "Order Payment"],
-            "urls" => ["returnUrl" => route('api.v1.mobilepay.success'), "cancelUrl" => route('api.v1.mobilepay.cancel')]
+            "urls" => ["returnUrl" => route('mobilepay.success'), "cancelUrl" => route('mobilepay.cancel')]
         ];
 
         $response = Http::withHeaders([
@@ -431,12 +431,7 @@ class PaymentController extends Controller
             $total = $this->calculateCartTotal($cartItems, $request->shipping_method ?? [], $request->coupon ?? null);
             $order = $this->storeOrder('MobilePay', 1, $orderId, $total, $request, $request->shipping_method ?? [], false, $personalInfo);
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Payment verified and order created',
-                'order_id' => $order->id,
-                'data' => $statusResponse->json()
-            ]);
+            return redirect()->route('order.success', ['order_id' => $order->id]);
         }
 
         return response()->json(['status' => 'success', 'message' => 'Payment verified', 'data' => $statusResponse->json()]);

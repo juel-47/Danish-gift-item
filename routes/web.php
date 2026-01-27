@@ -111,9 +111,15 @@ Route::post('/cart/sync', [CartController::class, 'sync'])->name('cart.sync');
 Route::post('/checkout', [PaymentController::class, 'store'])
     ->name('checkout.store')->middleware('auth:customer');
 
-Route::get('/order/success', [CheckOutController::class, 'success'])
+Route::get('/order/success/{order_id?}', [CheckOutController::class, 'success'])
     ->name('order.success')
     ->middleware('auth:customer');
+
+// Payment Success/Cancel Routes
+Route::get('paypal/success', [PaymentController::class, 'paypalSuccess'])->name('paypal.success');
+Route::get('paypal/cancel', [PaymentController::class, 'paypalCancel'])->name('paypal.cancel');
+Route::get('mobilepay/success', [PaymentController::class, 'mobilePaySuccess'])->name('mobilepay.success');
+Route::get('mobilepay/cancel', [PaymentController::class, 'mobilePayCancel'])->name('mobilepay.cancel');
 
 // page routes 
 Route::controller(PageController::class)->group(function () {
@@ -140,3 +146,4 @@ require __DIR__ . '/auth.php';
 Gate::before(function ($user, $ability) {
     return $user->hasRole('SuperAdmin') ? true : null;
 });
+
