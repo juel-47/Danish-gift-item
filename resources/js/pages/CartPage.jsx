@@ -7,7 +7,9 @@ import toast from "react-hot-toast";
 
 const CartPage = () => {
   const { cart_items, total: serverTotal, settings, promotions = [], shipping_methods = [], pickup_methods = [], countries = [], customer_addresses = [] } = usePage().props;
-  const { cartItems, total, setCart, increment, decrement, remove, clearCart } = useCartStore();
+  const cartItems = useCartStore(state => state.cartItems);
+  const cartTotal = useCartStore(state => state.total);
+  const { setCart, increment, decrement, remove, clearCart } = useCartStore();
 
 
   // Initialize cart store with server data
@@ -38,6 +40,8 @@ const CartPage = () => {
   });
 
   const [selectedShippingCost, setSelectedShippingCost] = useState(0);
+
+ 
 
   // Pre-fill address
   useEffect(() => {
@@ -114,12 +118,15 @@ const CartPage = () => {
       toast.success("Cart cleared", { id: 'cart-page-toast' });
   };
 
-  const subtotal = total || 0;
+  // Use store total if available, otherwise fallback to server provided total
+  const subtotal = Number(cartTotal > 0 ? cartTotal : serverTotal) || 0;
+  
   // Shipping logic is now handled by selectedShippingCost in the form
   // Only show generic shipping estimate if NOT in checkout mode?
   // Actually, let's use selectedShippingCost for the total calculation if checkout is active.
   
-  const finalTotal = Number(subtotal) + Number(selectedShippingCost);
+  const finalTotal = Number(subtotal) + (Number(selectedShippingCost) || 0);
+  const totalItems = cartItems.length;
 
 
   return (
@@ -139,7 +146,7 @@ const CartPage = () => {
             {cartItems.length > 0 && (
                 <button 
                     onClick={handleClearCart}
-                    className="text-[var(--color-red)] hover:text-red-700 font-medium flex items-center gap-2 transition-colors border-b border-transparent hover:border-[var(--color-red)]"
+                    className="text-[var(--color-red)] hover:text-red-700 font-medium flex items-center gap-2 transition-colors border-b border-transparent hover:border-red"
                 >
                     <Trash2 size={18} />
                     <span>Clear All</span>
@@ -155,17 +162,17 @@ const CartPage = () => {
             {/* Left Column: Cart Items + (Optional) Checkout Form */}
             <div className="lg:col-span-8 space-y-8">
               {/* Cart Items List */}
-              <div className="bg-white rounded-xl shadow-sm border border-[var(--color-gray)] overflow-hidden">
+              <div className="bg-white rounded-xl shadow-sm border border-gray overflow-hidden">
                 {cartItems.map((item) => (
                   <div
                     key={item.id}
-                    className="p-5 sm:p-6 flex flex-col sm:flex-row gap-5 border-b border-[var(--color-gray)] last:border-b-0"
+                    className="p-5 sm:p-6 flex flex-col sm:flex-row gap-5 border-b border-gray last:border-b-0"
                   >
                     {/* Image */}
                     <div className="w-full sm:w-32 h-32 flex-shrink-0">
                       <img
-                        src={item.options?.image ? `/${item.options.image}` : item.image}
-                        alt={item.name || item.product?.name}
+                        src={`/${item.product?.thumb_image || item.options?.image || item.image}`}
+                        alt={item.product?.name || item.name}
                         className="w-full h-full object-cover rounded-lg"
                       />
                     </div>
@@ -177,9 +184,20 @@ const CartPage = () => {
                           <h3 className="font-medium text-gray-900 text-lg">
                             {item.product?.name || item.name}
                           </h3>
-                          <p className="text-sm text-gray-500 mt-1">{item.options?.size_name || item.variant}</p>
-                          <p className="text-lg font-semibold text-[var(--color-red)] mt-2">
-                            {settings?.currency_icon || '€'}{item.price}
+                          <p className="text-sm text-gray-500 mt-1">
+                            {item.options?.color_name && <span>Color: {item.options.color_name}</span>}
+                            {item.options?.color_name && item.options?.size_name && <span>, </span>}
+                            {item.options?.size_name && <span>Size: {item.options.size_name}</span>}
+                            {!(item.options?.color_name || item.options?.size_name) && item.variant}
+                          </p>
+                          {parseFloat(item.options?.variant_total || 0) > 0 && (
+                            <p className="text-sm font-bold text-gray-700 mt-1">
+                               variant extra : + {settings?.currency_icon || 'DKK.'}{parseFloat(item.options.variant_total).toFixed(2)}
+                            </p>
+                          )}
+                          <p className="text-lg font-semibold text-red mt-2">
+                            {settings?.currency_icon || '€'}
+                            {(parseFloat(item.price && item.price > 0 ? item.price : (item.product?.offer_price && item.product?.offer_price > 0 ? item.product?.offer_price : (item.product?.price || 0)))).toFixed(2)}
                           </p>
                         </div>
 
@@ -194,7 +212,7 @@ const CartPage = () => {
 
                       {/* Quantity & Remove (desktop) */}
                       <div className="mt-4 flex items-center justify-between sm:justify-start gap-6">
-                        <div className="flex items-center border border-[var(--color-gray)] rounded-md overflow-hidden">
+                        <div className="flex items-center border border-gray rounded-md overflow-hidden">
                           <button
                             onClick={() => handleMinus(item.id, item.quantity)}
                             className="px-3 py-2 bg-gray-100 hover:bg-gray-200 transition"
@@ -214,7 +232,7 @@ const CartPage = () => {
 
                         <button
                           onClick={() => handleRemove(item.id)}
-                          className="hidden sm:flex items-center gap-1.5 text-gray-500 hover:text-[var(--color-red)] transition"
+                          className="hidden sm:flex items-center gap-1.5 text-gray-500 hover:text-red transition"
                         >
                           <Trash2 size={18} />
                           <span className="text-sm">Remove</span>
@@ -238,19 +256,18 @@ const CartPage = () => {
 
                 <div className="space-y-4">
                   <div className="flex justify-between text-gray-600">
-                    <span>Subtotal ({cartItems.length} items)</span>
-                    <span>{settings?.currency_icon || '€'}{(Number(subtotal) || 0).toFixed(2)}</span>
+                    <span>Subtotal ({totalItems} items)</span>
+                    <span>{settings?.currency_icon || 'DKK.'}{subtotal.toFixed(2)}</span>
                   </div>
                   
                   <div className="flex justify-between text-gray-600">
                     <span>Shipping</span>
                     <span>Calculated at checkout</span>
                   </div>
-                  
-                  <div className="border-t border-[var(--color-gray)] pt-4 mt-2">
+                  <div className="border-t border-gray pt-4 mt-2">
                     <div className="flex justify-between text-lg font-bold text-gray-900">
                       <span>Total</span>
-                      <span>{settings?.currency_icon || '€'}{(Number(subtotal) || 0).toFixed(2)}</span>
+                      <span>{settings?.currency_icon || 'DKK.'}{finalTotal.toFixed(2)}</span>
                     </div>
                     <p className="text-sm text-gray-500 mt-1">
                       Including VAT
@@ -261,7 +278,7 @@ const CartPage = () => {
                 <div className="mt-6">
                     <Link
                       href={route('checkout')}
-                      className="block w-full text-center bg-[var(--color-red)] text-white py-4 rounded-lg font-medium hover:bg-red-800 transition duration-200 shadow-md"
+                      className="block w-full text-center bg-red text-white py-4 rounded-lg font-medium hover:bg-red-800 transition duration-200 shadow-md"
                     >
                       Proceed to Checkout
                     </Link>
@@ -288,7 +305,7 @@ const EmptyCart = () => (
     </p>
     <Link
       href={route('all.products')}
-      className="inline-block bg-[var(--color-red)] text-white px-8 py-4 rounded-lg font-medium hover:bg-red-800 transition"
+      className="inline-block bg-red text-white px-8 py-4 rounded-lg font-medium hover:bg-red-800 transition"
     >
       Start Shopping
     </Link>

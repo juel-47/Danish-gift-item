@@ -74,12 +74,20 @@ class CartController extends Controller
         if ($request->color_id) {
             $product->load('colors');
             $color = $product->colors->firstWhere('id', $request->color_id);
-            $colorPrice = $color->pivot->color_price ?? 0;
-            $colorName = $color->color_name ?? null;
+            
+            if ($color) {
+                $colorPrice = $color->pivot->color_price ?? 0;
+                $colorName = $color->color_name ?? null;
+            } else {
+                // Fallback: If not in pivot, look up color globally (could be from gallery)
+                $globalColor = \App\Models\Color::find($request->color_id);
+                $colorName = $globalColor->color_name ?? null;
+                $colorPrice = 0; // Default or could check if price exists elsewhere
+            }
         }
 
         $variantTotal = $sizePrice + $colorPrice;
-        $basePrice = $product->offer_price ?? $product->price;
+        $basePrice = ($product->offer_price && $product->offer_price > 0) ? $product->offer_price : $product->price;
 
         /* Auth / Session */
         $userId = auth('customer')->id();
@@ -103,13 +111,10 @@ class CartController extends Controller
                 'quantity' => $request->qty,
                 'price' => $basePrice,
                 'options' => [
-                    'image' => $product->thumb_image,
                     'size_id' => $request->size_id,
                     'size_name' => $sizeName,
-                    'size_price' => $sizePrice,
                     'color_id' => $request->color_id,
                     'color_name' => $colorName,
-                    'color_price' => $colorPrice,
                     'variant_total' => $variantTotal,
                     'is_free_product' => false,
                 ],
@@ -137,9 +142,13 @@ class CartController extends Controller
         // dd($cartItems);
         $cartItems->each(function ($item) {
             $opt = $item->options;
+            // Remove keys requested by user
+            unset($opt['color_price'], $opt['size_price'], $opt['image']);
+            $item->options = $opt;
 
-            // Calculate total
-            $item->total = ($item->price + ($opt['variant_total'] ?? 0)) * $item->quantity;
+            // Calculate total with robust fallback
+            $basePrice = ($item->price && $item->price > 0) ? $item->price : (($item->product->offer_price && $item->product->offer_price > 0) ? $item->product->offer_price : ($item->product->price ?? 0));
+            $item->total = ($basePrice + ($opt['variant_total'] ?? 0)) * $item->quantity;
         });
 
         $total = $cartItems->sum('total');
@@ -152,7 +161,7 @@ class CartController extends Controller
         // ]);
         return Inertia::render('CartPage', [
             'cart_items' => $cartItems->values(),
-            'total' => number_format($total, 2),
+            'total' => (float)$total,
             'promotions' => $promotions,
         ]);
     }
@@ -235,9 +244,12 @@ class CartController extends Controller
     {
         $userId = auth('customer')->id();
         $sessionId = session()->getId();
-        // $sessionId =11;
 
-        return Cart::with('product')
+        return Cart::select('id', 'user_id', 'session_id', 'product_id', 'quantity', 'price', 'options')
+            ->with(['product' => function ($query) {
+                // Ensure price and thumbnail are fetched from product as fallbacks
+                $query->select('id', 'name', 'slug', 'thumb_image', 'qty', 'category_id', 'price', 'offer_price');
+            }])
             ->where(fn($q) => $userId ? $q->where('user_id', $userId) : $q->where('session_id', $sessionId))
             ->get();
     }

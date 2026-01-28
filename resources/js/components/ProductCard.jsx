@@ -21,7 +21,11 @@ const ProductCard = ({ product, onImageLoad, forceLoading = false }) => {
     const [isHovered, setIsHovered] = useState(false);
 
     const isOutOfStock = !product.qty || product.qty <= 0;
-    const hasOptions = product?.colors_count > 0 || product?.sizes_count > 0;
+    const hasOptions = (Number(product?.colors_count) > 0) || 
+                       (Number(product?.sizes_count) > 0) || 
+                       (Number(product?.product_image_galleries_count) > 0) ||
+                       (product?.colors?.length > 0) || 
+                       (product?.sizes?.length > 0);
 
     const handleAddToCart = async () => {
         if (isAdding || isOutOfStock) return;

@@ -25,21 +25,38 @@ export const useCartStore = create(
             // Recalculate: ensures quantity is number, and cartCount is unique items count
             recalculate: (items) => {
                 const total = items.reduce((sum, i) => {
-                    const quantity = Number(i.quantity) || 1; // Force number
-                    const basePrice = parseFloat(i.price || 0);
-                    const variantTotal = parseFloat(i.options?.variant_total || 0);
+                    const quantity = Number(i.quantity) || 1; 
+                    
+                    // Multi-layer price fallback
+                    let rawPrice = i.price;
+                    let basePrice = parseFloat(rawPrice);
+                    
+                    // If item price is missing, NaN, or 0, check the attached product info
+                    if (isNaN(basePrice) || basePrice <= 0) {
+                        const prod = i.product || {};
+                        const offerPrice = parseFloat(prod.offer_price);
+                        const regularPrice = parseFloat(prod.price);
+                        basePrice = (!isNaN(offerPrice) && offerPrice > 0) ? offerPrice : (!isNaN(regularPrice) ? regularPrice : 0);
+                    }
+                    
+                    if (isNaN(basePrice)) basePrice = 0;
+                    
+                    const variantTotal = parseFloat(i.options?.variant_total || 0) || 0;
 
                     const itemTotalPrice = basePrice + variantTotal;
-                    return sum + itemTotalPrice * quantity;
+                    
+                    return sum + (itemTotalPrice * quantity);
                 }, 0);
 
-                const count = items.length; // unique items count
-
-                return {
+                const count = items.length; 
+                
+                const result = {
                     cartItems: items,
                     total: Number(total.toFixed(2)),
                     cartCount: count,
                 };
+                
+                return result;
             },
 
             setCart: (items) => {
@@ -134,12 +151,13 @@ export const useCartStore = create(
                                 id: Date.now(), // Temporary ID for optimistic UI
                                 product_id: product.id,
                                 name: product.name,
-                                price: product.price,
+                                // Use offer_price if available, otherwise regular price
+                                price: (product.offer_price && parseFloat(product.offer_price) > 0) ? product.offer_price : product.price,
+                                product: product, // Store product for better recalculation fallbacks
                                 quantity: Number(quantity),
                                 options: {
                                     ...options,
-                                    image: product.thumb_image,
-                                    variant_total: 0, // Simplified for now
+                                    variant_total: parseFloat(options.variant_total || 0),
                                 }
                             }
                         ];

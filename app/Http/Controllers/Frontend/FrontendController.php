@@ -132,6 +132,7 @@ class FrontendController extends Controller
                 'reviews' => fn($q) => $q->where('status', 1),
                 'colors' => fn($q) => $q->active(),
                 'sizes' => fn($q) => $q->active(),
+                'productImageGalleries' => fn($q) => $q->whereNotNull('color_id'),
             ])
             ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
             ->paginate(20)
@@ -187,6 +188,7 @@ class FrontendController extends Controller
                 'reviews' => fn($q) => $q->where('status', 1),
                 'colors' => fn($q) => $q->active(),
                 'sizes' => fn($q) => $q->active(),
+                'productImageGalleries' => fn($q) => $q->whereNotNull('color_id'),
             ])
             ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
             ->paginate(20)
@@ -242,6 +244,7 @@ class FrontendController extends Controller
                 'reviews' => fn($q) => $q->where('status', 1),
                 'colors' => fn($q) => $q->active(),
                 'sizes' => fn($q) => $q->active(),
+                'productImageGalleries' => fn($q) => $q->whereNotNull('color_id'),
             ])
             ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
             ->paginate(20)
@@ -296,6 +299,7 @@ class FrontendController extends Controller
                 'reviews' => fn($q) => $q->where('status', 1),
                 'colors' => fn($q) => $q->active(),
                 'sizes' => fn($q) => $q->active(),
+                'productImageGalleries' => fn($q) => $q->whereNotNull('color_id'),
             ])
             ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
             ->paginate(20)
@@ -386,6 +390,11 @@ class FrontendController extends Controller
             ->where('id', '!=', $product->id)
             ->take(6)
             ->with(['category:id,name', 'productImageGalleries'])
+            ->withCount([
+                'colors' => fn($q) => $q->active(),
+                'sizes' => fn($q) => $q->active(),
+                'productImageGalleries' => fn($q) => $q->whereNotNull('color_id'),
+            ])
             ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
             ->get();
 
@@ -413,7 +422,12 @@ class FrontendController extends Controller
                 'sizes:id,size_name,price,is_default',
                 'productImageGalleries:id,image,product_id,color_id'
             ])
-                ->withCount(['reviews' => fn($q) => $q->where('status', 1)])
+                ->withCount([
+                    'reviews' => fn($q) => $q->where('status', 1),
+                    'colors' => fn($q) => $q->active(),
+                    'sizes' => fn($q) => $q->active(),
+                    'productImageGalleries' => fn($q) => $q->whereNotNull('color_id'),
+                ])
                 ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
                 ->paginate(24)
                 ->withQueryString();

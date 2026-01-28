@@ -131,6 +131,16 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
 
   const handleAddToCart = async (isBuyNow = false) => {
     if (isAdding || isBuying) return;
+
+    if (derivedColors.length > 0 && !selectedColor) {
+      toast.error("Please select a color");
+      return;
+    }
+
+    if (normalizedProduct.sizes.length > 0 && !selectedSize) {
+      toast.error("Please select a size");
+      return;
+    }
     
     const selectedColorObj = derivedColors.find(c => c.color_name === selectedColor);
     const selectedSizeObj = normalizedProduct.sizes.find(s => s.size_name === selectedSize);
@@ -142,6 +152,9 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
       size_id: selectedSizeObj?.id || null,
     };
 
+    const variantTotal = (parseFloat(selectedColorObj?.pivot?.color_price || 0) + 
+                          parseFloat(selectedSizeObj?.pivot?.size_price || 0));
+
     if (isBuyNow) {
         setIsBuying(true);
         // Instant store update before navigation
@@ -150,7 +163,8 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
             color_id: data.color_id,
             size_id: data.size_id,
             color_name: selectedColor,
-            size_name: selectedSize
+            size_name: selectedSize,
+            variant_total: variantTotal
         });
 
         router.post(route('cart.add'), data, {
@@ -178,7 +192,8 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
         color_id: data.color_id,
         size_id: data.size_id,
         color_name: selectedColor,
-        size_name: selectedSize
+        size_name: selectedSize,
+        variant_total: variantTotal
     });
     toast.success("Product added to cart!", { id: 'cart-toast' });
 

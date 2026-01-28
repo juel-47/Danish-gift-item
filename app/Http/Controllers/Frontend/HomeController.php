@@ -75,6 +75,7 @@ class HomeController extends Controller
                     ->withCount([
                         'colors' => fn($q) => $q->active(),
                         'sizes' => fn($q) => $q->active(),
+                        'productImageGalleries' => fn($q) => $q->whereNotNull('color_id'),
                     ])
 
                     ->orderByDesc('id')
@@ -107,6 +108,7 @@ class HomeController extends Controller
                 ->withCount([
                     'colors' => fn($q) => $q->active(),
                     'sizes' => fn($q) => $q->active(),
+                    'productImageGalleries' => fn($q) => $q->whereNotNull('color_id'),
                 ])
 
                 ->orderByDesc('id')

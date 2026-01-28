@@ -6,8 +6,9 @@ import useCartStore from '../stores/cartStore';
 
 const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_addresses }) => {
     const { settings } = usePage().props;
-    const { cartItems, total } = useCartStore(); 
-    const subtotal = Number(total) || 0;
+    const cartItems = useCartStore(state => state.cartItems);
+    const cartTotal = useCartStore(state => state.total);
+    const subtotal = Number(cartTotal) || 0;
 
     const { data, setData, post, processing, errors, transform } = useForm({
         // UI Fields
@@ -62,7 +63,7 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
         post(route('checkout.store'));
     };
 
-    const finalTotal = subtotal + selectedShippingCost;
+    const finalTotal = Number(subtotal) + (Number(selectedShippingCost) || 0);
 
     return (
         <div className="min-h-screen bg-gray py-8 px-4 sm:px-6 lg:px-8">
@@ -72,7 +73,7 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
                 <div className="mb-8">
                     <Link
                         href={route('cart.index')}
-                        className="inline-flex items-center gap-2 text-gray-600 hover:text-[var(--color-red)] transition mb-4"
+                        className="inline-flex items-center gap-2 text-gray-600 hover:text-red transition mb-4"
                     >
                         <ArrowLeft size={18} />
                         Back to Cart
@@ -84,9 +85,9 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
                     {/* Left - Forms */}
                     <div className="lg:col-span-8 space-y-10">
                         {/* Contact & Shipping */}
-                        <section className="bg-white rounded-xl shadow-sm border border-[var(--color-gray)] p-6 sm:p-8">
+                        <section className="bg-white rounded-xl shadow-sm border border-gray p-6 sm:p-8">
                             <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-3">
-                                <Truck size={22} className="text-[var(--color-red)]" />
+                                <Truck size={22} className="text-red" />
                                 Shipping Information
                             </h2>
 
@@ -99,7 +100,7 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
                                         type="text"
                                         value={data.first_name}
                                         onChange={e => setData('first_name', e.target.value)}
-                                        className="w-full px-4 py-3 border border-[var(--color-gray)] rounded-lg focus:ring-2 focus:ring-[var(--color-red)] focus:border-[var(--color-red)] outline-none transition"
+                                        className="w-full px-4 py-3 border border-gray rounded-lg focus:ring-2 focus:ring-red focus:border-red outline-none transition"
                                         placeholder="John"
                                     />
                                     {errors['personal_info.first_name'] && <p className="text-red-500 text-xs mt-1">{errors['personal_info.first_name']}</p>}
@@ -112,7 +113,7 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
                                         type="text"
                                         value={data.last_name}
                                         onChange={e => setData('last_name', e.target.value)}
-                                        className="w-full px-4 py-3 border border-[var(--color-gray)] rounded-lg focus:ring-2 focus:ring-[var(--color-red)] focus:border-[var(--color-red)] outline-none transition"
+                                        className="w-full px-4 py-3 border border-gray rounded-lg focus:ring-2 focus:ring-red focus:border-red outline-none transition"
                                         placeholder="Doe"
                                     />
                                     {errors['personal_info.last_name'] && <p className="text-red-500 text-xs mt-1">{errors['personal_info.last_name']}</p>}
@@ -127,7 +128,7 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
                                     type="email"
                                     value={data.email}
                                     onChange={e => setData('email', e.target.value)}
-                                    className="w-full px-4 py-3 border border-[var(--color-gray)] rounded-lg focus:ring-2 focus:ring-[var(--color-red)] focus:border-[var(--color-red)] outline-none transition"
+                                    className="w-full px-4 py-3 border border-gray rounded-lg focus:ring-2 focus:ring-red focus:border-red outline-none transition"
                                     placeholder="your@email.com"
                                 />
                                 {errors['personal_info.email'] && <p className="text-red-500 text-xs mt-1">{errors['personal_info.email']}</p>}
@@ -141,13 +142,13 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
                                     type="tel"
                                     value={data.phone}
                                     onChange={e => setData('phone', e.target.value)}
-                                    className="w-full px-4 py-3 border border-[var(--color-gray)] rounded-lg focus:ring-2 focus:ring-[var(--color-red)] focus:border-[var(--color-red)] outline-none transition"
+                                    className="w-full px-4 py-3 border border-gray rounded-lg focus:ring-2 focus:ring-red focus:border-red outline-none transition"
                                     placeholder="+45 12 34 56 78"
                                 />
                                 {errors['personal_info.phone'] && <p className="text-red-500 text-xs mt-1">{errors['personal_info.phone']}</p>}
                             </div>
 
-                            <div className="mt-8 border-t border-[var(--color-gray)] pt-6">
+                            <div className="mt-8 border-t border-gray pt-6">
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">Shipping Address</h3>
                                 <div className="space-y-6">
                                     <div>
@@ -158,7 +159,7 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
                                             type="text"
                                             value={data.street_address}
                                             onChange={e => setData('street_address', e.target.value)}
-                                            className="w-full px-4 py-3 border border-[var(--color-gray)] rounded-lg focus:ring-2 focus:ring-[var(--color-red)] focus:border-[var(--color-red)] outline-none transition"
+                                            className="w-full px-4 py-3 border border-gray rounded-lg focus:ring-2 focus:ring-red focus:border-red outline-none transition"
                                             placeholder="123 Main Street"
                                         />
                                         {errors['shipping_address.address'] && <p className="text-red-500 text-xs mt-1">{errors['shipping_address.address']}</p>}
@@ -173,7 +174,7 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
                                                 type="text"
                                                 value={data.city}
                                                 onChange={e => setData('city', e.target.value)}
-                                                className="w-full px-4 py-3 border border-[var(--color-gray)] rounded-lg focus:ring-2 focus:ring-[var(--color-red)] focus:border-[var(--color-red)] outline-none transition"
+                                                className="w-full px-4 py-3 border border-gray rounded-lg focus:ring-2 focus:ring-red focus:border-red outline-none transition"
                                                 placeholder="Copenhagen"
                                             />
                                             {errors['shipping_address.city'] && <p className="text-red-500 text-xs mt-1">{errors['shipping_address.city']}</p>}
@@ -186,7 +187,7 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
                                                 type="text"
                                                 value={data.zip_code}
                                                 onChange={e => setData('zip_code', e.target.value)}
-                                                className="w-full px-4 py-3 border border-[var(--color-gray)] rounded-lg focus:ring-2 focus:ring-[var(--color-red)] focus:border-[var(--color-red)] outline-none transition"
+                                                className="w-full px-4 py-3 border border-gray rounded-lg focus:ring-2 focus:ring-red focus:border-red outline-none transition"
                                                 placeholder="1050"
                                             />
                                             {errors['shipping_address.zip_code'] && <p className="text-red-500 text-xs mt-1">{errors['shipping_address.zip_code']}</p>}
@@ -200,7 +201,7 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
                                         <select
                                             value={data.country}
                                             onChange={e => setData('country', e.target.value)}
-                                            className="w-full px-4 py-3 border border-[var(--color-gray)] rounded-lg focus:ring-2 focus:ring-[var(--color-red)] focus:border-[var(--color-red)] outline-none transition bg-white"
+                                            className="w-full px-4 py-3 border border-gray rounded-lg focus:ring-2 focus:ring-red focus:border-red outline-none transition bg-white"
                                         >
                                             {countries && Object.entries(countries).length > 0 ? (
                                                 Object.entries(countries).map(([code, name]) => (
@@ -216,11 +217,11 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
                             </div>
                             
                             {/* Shipping Methods */}
-                            <div className="mt-8 border-t border-[var(--color-gray)] pt-6">
+                            <div className="mt-8 border-t border-gray pt-6">
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">Shipping Method</h3>
                                 <div className="space-y-3">
                                     {shipping_methods.map((method) => (
-                                        <label key={method.id} className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition ${data.shipping_method_id === method.id ? 'border-[var(--color-red)] bg-red-50' : 'border-[var(--color-gray)] hover:border-[var(--color-red)]'}`}>
+                                        <label key={method.id} className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition ${data.shipping_method_id === method.id ? 'border-red bg-red-50' : 'border-gray hover:border-red'}`}>
                                             <div className="flex items-center gap-3">
                                                 <input
                                                     type="radio"
@@ -228,7 +229,7 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
                                                     value={method.id}
                                                     checked={data.shipping_method_id === method.id}
                                                     onChange={() => handleShippingChange(method)}
-                                                    className="text-[var(--color-red)] focus:ring-[var(--color-red)]"
+                                                    className="text-red focus:ring-red"
                                                 />
                                                 <span className="font-medium text-gray-900">{method.name}</span>
                                             </div>
@@ -241,21 +242,21 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
                         </section>
 
                         {/* Payment */}
-                        <section className="bg-white rounded-xl shadow-sm border border-[var(--color-gray)] p-6 sm:p-8">
+                        <section className="bg-white rounded-xl shadow-sm border border-gray p-6 sm:p-8">
                             <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-3">
-                                <CreditCard size={22} className="text-[var(--color-red)]" />
+                                <CreditCard size={22} className="text-red" />
                                 Payment Method
                             </h2>
 
                             <div className="space-y-4">
-                                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition ${data.payment_method === 'paypal' ? 'border-[var(--color-red)] bg-red-50' : 'border-[var(--color-gray)] hover:border-[var(--color-red)]'}`}>
+                                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition ${data.payment_method === 'paypal' ? 'border-red bg-red-50' : 'border-gray hover:border-red'}`}>
                                     <input
                                         type="radio"
                                         name="payment"
                                         value="paypal"
                                         checked={data.payment_method === 'paypal'}
                                         onChange={(e) => setData('payment_method', e.target.value)}
-                                        className="w-5 h-5 text-[var(--color-red)] focus:ring-[var(--color-red)]"
+                                        className="w-5 h-5 text-red focus:ring-red"
                                     />
                                     <div>
                                         <div className="font-medium">PayPal</div>
@@ -263,14 +264,14 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
                                     </div>
                                 </label>
 
-                                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition ${data.payment_method === 'mobilePay' ? 'border-[var(--color-red)] bg-red-50' : 'border-[var(--color-gray)] hover:border-[var(--color-red)]'}`}>
+                                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition ${data.payment_method === 'mobilePay' ? 'border-red bg-red-50' : 'border-gray hover:border-red'}`}>
                                     <input
                                         type="radio"
                                         name="payment"
                                         value="mobilePay"
                                         checked={data.payment_method === 'mobilePay'}
                                         onChange={(e) => setData('payment_method', e.target.value)}
-                                        className="w-5 h-5 text-[var(--color-red)] focus:ring-[var(--color-red)]"
+                                        className="w-5 h-5 text-red focus:ring-red"
                                     />
                                     <div>
                                         <div className="font-medium">MobilePay</div>
@@ -278,28 +279,28 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
                                     </div>
                                 </label>
                                 
-                                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition ${data.payment_method === 'payoneer' ? 'border-[var(--color-red)] bg-red-50' : 'border-[var(--color-gray)] hover:border-[var(--color-red)]'}`}>
+                                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition ${data.payment_method === 'payoneer' ? 'border-red bg-red-50' : 'border-gray hover:border-red'}`}>
                                     <input
                                         type="radio"
                                         name="payment"
                                         value="payoneer"
                                         checked={data.payment_method === 'payoneer'}
                                         onChange={(e) => setData('payment_method', e.target.value)}
-                                        className="w-5 h-5 text-[var(--color-red)] focus:ring-[var(--color-red)]"
+                                        className="w-5 h-5 text-red focus:ring-red"
                                     />
                                     <div>
                                         <div className="font-medium">Payoneer</div>
                                     </div>
                                 </label>
 
-                                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition ${data.payment_method === 'cashOnDelivery' ? 'border-[var(--color-red)] bg-red-50' : 'border-[var(--color-gray)] hover:border-[var(--color-red)]'}`}>
+                                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition ${data.payment_method === 'cashOnDelivery' ? 'border-red bg-red-50' : 'border-gray hover:border-red'}`}>
                                     <input
                                         type="radio"
                                         name="payment"
                                         value="cashOnDelivery"
                                         checked={data.payment_method === 'cashOnDelivery'}
                                         onChange={(e) => setData('payment_method', e.target.value)}
-                                        className="w-5 h-5 text-[var(--color-red)] focus:ring-[var(--color-red)]"
+                                        className="w-5 h-5 text-red focus:ring-red"
                                     />
                                     <div>
                                         <div className="font-medium">Cash On Delivery</div>
@@ -312,7 +313,7 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
 
                     {/* Right - Order Summary */}
                     <div className="lg:col-span-4">
-                        <div className="bg-white rounded-xl shadow-sm border border-[var(--color-gray)] p-6 sm:p-8 sticky top-8">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray p-6 sm:p-8 sticky top-8">
                             <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Summary</h2>
 
                             <div className="space-y-5 mb-8">
@@ -321,18 +322,29 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
                                 ) : (
                                     cartItems.map((item) => (
                                         <div key={item.id} className="flex gap-4">
-                                            <div className="w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border border-[var(--color-gray)]">
+                                            <div className="w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border border-gray">
                                                 <img
-                                                    src={item.image || item.options?.image || '/placeholder.png'}
-                                                    alt={item.name}
+                                                    src={item.product?.thumb_image ? `/${item.product.thumb_image}` : (item.image || '/placeholder.png')}
+                                                    alt={item.product?.name || item.name}
                                                     className="w-full h-full object-cover"
                                                 />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-gray-900 line-clamp-2">{item.name}</p>
-                                                <p className="text-sm text-gray-500 mt-0.5">Qty: {item.quantity}</p>
-                                                <p className="text-sm font-medium text-[var(--color-red)] mt-1">
-                                                    {settings?.currency_icon || '€'}{(item.price * item.quantity).toFixed(2)}
+                                                <p className="font-medium text-gray-900 line-clamp-2">{item.product?.name || item.name}</p>
+                                                <p className="text-xs text-gray-500 mt-0.5">
+                                                    {item.options?.color_name && <span>{item.options.color_name}</span>}
+                                                    {item.options?.color_name && item.options?.size_name && <span>, </span>}
+                                                    {item.options?.size_name && <span>{item.options.size_name}</span>}
+                                                </p>
+                                                <p className="text-xs text-gray-500 mt-0.5">Qty: {item.quantity}</p>
+                                                {parseFloat(item.options?.variant_total || 0) > 0 && (
+                                                    <p className="text-[11px] font-bold text-gray-700 mt-0.5">
+                                                        variant extra : + {settings?.currency_icon || 'DKK.'}{parseFloat(item.options.variant_total).toFixed(2)}
+                                                    </p>
+                                                )}
+                                                <p className="text-sm font-medium text-red mt-1">
+                                                    {settings?.currency_icon || '€'}
+                                                    {((parseFloat(item.price && item.price > 0 ? item.price : (item.product?.offer_price && item.product?.offer_price > 0 ? item.product?.offer_price : (item.product?.price || 0))) + parseFloat(item.options?.variant_total || 0)) * item.quantity).toFixed(2)}
                                                 </p>
                                             </div>
                                         </div>
@@ -340,27 +352,27 @@ const CheckoutPage = ({ shipping_methods, pickup_methods, countries, customer_ad
                                 )}
                             </div>
 
-                            <div className="space-y-4 border-t border-[var(--color-gray)] pt-6">
+                            <div className="space-y-4 border-t border-gray pt-6">
                                 <div className="flex justify-between text-gray-600">
                                     <span>Subtotal</span>
-                                    <span>{settings?.currency_icon || '€'}{subtotal.toFixed(2)}</span>
+                                    <span>{settings?.currency_icon || 'DKK.'}{subtotal.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-600">
                                     <span>Shipping</span>
                                     <span className={selectedShippingCost === 0 ? "text-green-600 font-medium" : ""}>
-                                        {selectedShippingCost === 0 ? 'FREE' : `${settings?.currency_icon || '€'}${selectedShippingCost.toFixed(2)}`}
+                                        {selectedShippingCost === 0 ? 'FREE' : `${settings?.currency_icon || 'DKK.'}${selectedShippingCost.toFixed(2)}`}
                                     </span>
                                 </div>
-                                <div className="flex justify-between text-lg font-bold text-gray-900 border-t border-[var(--color-gray)] pt-4">
+                                <div className="flex justify-between text-lg font-bold text-gray-900 border-t border-gray pt-4">
                                     <span>Total</span>
-                                    <span>{settings?.currency_icon || '€'}{finalTotal.toFixed(2)}</span>
+                                    <span>{settings?.currency_icon || 'DKK.'}{finalTotal.toFixed(2)}</span>
                                 </div>
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={processing || cartItems.length === 0}
-                                className={`w-full mt-8 bg-[var(--color-red)] text-white py-4 rounded-lg font-medium text-lg hover:bg-red-800 transition duration-200 shadow-md flex items-center justify-center gap-2 ${processing || cartItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`w-full mt-8 bg-red text-white py-4 rounded-lg font-medium text-lg hover:bg-red-800 transition duration-200 shadow-md flex items-center justify-center gap-2 ${processing || cartItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 <CheckCircle size={20} />
                                 {processing ? 'Processing...' : 'Place Order'}
