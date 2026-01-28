@@ -45,7 +45,7 @@ const Header = () => {
             categories: dynamicCategories
         },
         { label: "CAMPAIGN", path: "/campaigns", icon: null },
-        { label: "BLOG", path: "/blogs", icon: null },
+        { label: "BLOG", path: "/blog", icon: null },
         { label: "LOCATE STORE", path: "/locate-store", icon: null },
     ];
 

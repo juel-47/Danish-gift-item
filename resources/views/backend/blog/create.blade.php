@@ -51,7 +51,7 @@
                                         </select>
                                     </div>
                                     <div class="form-group col-md-12">
-                                        <label>Seo Title</label>
+                                        <label>Seo Description</label>
                                         <textarea class="form-control" name="seo_description" value="">{{ old('seo_description') }}</textarea>
                                     </div>
                                     <div class="form-group col-md-12">

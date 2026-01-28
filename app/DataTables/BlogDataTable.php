@@ -28,10 +28,10 @@ class BlogDataTable extends DataTable
                 return $editBtn.$deleteBtn;
             })
             ->addColumn('image', function($query){
-                return $query->image ? '<img src="'.asset($query->image).'" alt="'.$query->name.'" width="50px">' : '';
+                return $query->image ? '<img src="'.asset('storage/'.$query->image).'" alt="'.$query->title.'" width="70px" height="50px" style="object-fit: cover; border-radius: 4px;">' : '<span class="text-muted">No Image</span>';
             })
             ->addColumn('category', function($query){
-                return $query->category->name;
+                return $query->category ? $query->category->name : '<span class="text-muted">No Category</span>';
             })
             ->addColumn('status', function($query){
                 if($query->status==1){
@@ -61,7 +61,7 @@ class BlogDataTable extends DataTable
      */
     public function query(Blog $model): QueryBuilder
     {
-        return $model->newQuery();
+        return $model->newQuery()->with('category');
     }
 
     /**

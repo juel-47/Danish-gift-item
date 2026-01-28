@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Frontend\AuthController;
+use App\Http\Controllers\Frontend\BlogController;
 use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\Frontend\CheckOutController;
 use App\Http\Controllers\Frontend\FooterController;
@@ -136,6 +137,10 @@ Route::controller(FooterController::class)->group(function () {
     Route::get('/privacy-policy', 'privacyPolicy')->name('privacy.policy');
     Route::get('/legal-notice', 'legalPolicy')->name('legal.policy');
 });
+
+//blog routes
+Route::get('/blog', [BlogController::class, 'index'])->name('blog');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.details');
 
 //carrer routes
 Route::get('carrer', [JobApplicationController::class, 'carrer'])->name('carrer');
