@@ -133,7 +133,7 @@ const CampaignPage = ({ campaigns, featuredCampaign, featuredProducts }) => {
             Campaign Highlights
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 md:gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
             {featuredProducts.map((cp) => (
                 <ProductCard key={cp.id} product={cp.product} />
             ))}
@@ -181,12 +181,12 @@ const CampaignPage = ({ campaigns, featuredCampaign, featuredProducts }) => {
             limited — shop now!
           </p>
 
-          <a
-            href="/"
+          <Link
+            href="/campaign-products"
             className="inline-block bg-red text-white font-bold text-lg px-12 py-6 rounded-full hover:bg-red-800 transform hover:scale-105 transition-all shadow-lg"
           >
             Shop All Campaign Products →
-          </a>
+          </Link>
 
           <p className="mt-8 text-sm text-gray-600">
             Offer valid until {new Date(featuredCampaign.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} or while stocks last

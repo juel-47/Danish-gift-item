@@ -144,6 +144,7 @@ Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.details'
 
 //campaign routes
 Route::get('/campaign', [\App\Http\Controllers\Frontend\CampaignController::class, 'index'])->name('campaign.index');
+Route::get('/campaign-products', [\App\Http\Controllers\Frontend\CampaignController::class, 'allCampaignProducts'])->name('campaign.all-products');
 Route::get('/campaign/{slug}', [\App\Http\Controllers\Frontend\CampaignController::class, 'show'])->name('campaign.show');
 
 //carrer routes
