@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     protected $guarded = [];
+    protected $appends = ['effective_price', 'active_campaign_product'];
 
     // public function vendor()
     // {
@@ -98,5 +99,48 @@ class Product extends Model
     public function shippingMethods()
     {
         return $this->belongsToMany(ShippingMethod::class, 'product_shipping')->withPivot('charge');
+    }
+
+    public function campaignProducts()
+    {
+        return $this->hasMany(CampaignProduct::class);
+    }
+
+    /**
+     * Get the active campaign product for this product if any.
+     */
+    public function getActiveCampaignProductAttribute()
+    {
+        $now = now();
+        return $this->campaignProducts()
+            ->whereHas('campaign', function($query) use ($now) {
+                $query->where('status', 1)
+                    ->where('start_date', '<=', $now)
+                    ->where('end_date', '>=', $now);
+            })
+            ->first();
+    }
+
+    /**
+     * Get the effective price considering active campaigns.
+     */
+    public function getEffectivePriceAttribute()
+    {
+        $campaignProduct = $this->active_campaign_product;
+        
+        if ($campaignProduct) {
+            if ($campaignProduct->discount_type === 'percentage') {
+                return $this->price - ($this->price * $campaignProduct->discount_value / 100);
+            } else {
+                return $this->price - $campaignProduct->discount_value;
+            }
+        }
+
+        // Fallback to offer price if exists and no campaign
+        if ($this->offer_price > 0 && $this->offer_start_date <= date('Y-m-d') && $this->offer_end_date >= date('Y-m-d')) {
+            return $this->offer_price;
+        }
+
+        return $this->price;
     }
 }

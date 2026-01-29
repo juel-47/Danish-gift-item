@@ -1,9 +1,12 @@
 // BlogDetailPage.jsx
 import React from "react";
 import { Link, usePage } from "@inertiajs/react";
+import Skeleton, { BlogCardSkeleton } from "../components/Skeleton";
 
 const BlogDetailPage = () => {
-  const { blog, prevBlog, nextBlog } = usePage().props;
+  const { blog, relatedBlogs, prevBlog, nextBlog } = usePage().props;
+  const [isFeaturedImageLoaded, setIsFeaturedImageLoaded] = React.useState(false);
+
 
   // Format date
   const formatDate = (dateString) => {
@@ -72,11 +75,15 @@ const BlogDetailPage = () => {
         <div className="max-w-4xl mx-auto">
           {/* Featured Image */}
           {blog.image && (
-            <div className="rounded-2xl overflow-hidden shadow-lg mb-10 md:mb-16">
+            <div className="rounded-2xl overflow-hidden shadow-lg mb-10 md:mb-16 relative">
+              {!isFeaturedImageLoaded && (
+                <Skeleton className="w-full aspect-video md:aspect-4/3 lg:aspect-video" />
+              )}
               <img
                 src={`/storage/${blog.image}`}
                 alt={blog.title}
-                className="w-full h-auto object-cover aspect-video md:aspect-4/3 lg:aspect-video"
+                className={`w-full h-auto object-cover aspect-video md:aspect-4/3 lg:aspect-video ${!isFeaturedImageLoaded ? 'absolute inset-0 invisible' : 'visible'}`}
+                onLoad={() => setIsFeaturedImageLoaded(true)}
               />
             </div>
           )}
@@ -87,14 +94,14 @@ const BlogDetailPage = () => {
           </div>
 
           {/* Author Box */}
-          <div className="mt-16 p-6 md:p-8 bg-white rounded-2xl border border-gray flex flex-col md:flex-row gap-6 items-center md:items-start">
+          {/* <div className="mt-16 p-6 md:p-8 bg-white rounded-2xl border border-gray flex flex-col md:flex-row gap-6 items-center md:items-start">
             <div className="w-20 h-20 rounded-full bg-red/10 flex items-center justify-center text-2xl font-bold text-red flex-shrink-0">
               {getInitials(blog.user?.name)}
             </div>
             <p className="text-xl font-bold text-gray-900">
               {blog.user?.name || "Admin"}
             </p>
-          </div>
+          </div> */}
 
           {/* Pagination / Next & Previous (Exact matches your original design) */}
           <div className="mt-16 pt-10 border-t border-gray mb-10">
@@ -126,9 +133,51 @@ const BlogDetailPage = () => {
               )}
             </div>
           </div>
+
+          {/* Related Posts Section */}
+          {relatedBlogs && relatedBlogs.length > 0 && (
+            <div className="mt-16 pt-10 border-t border-gray">
+              <h3 className="text-2xl font-bold text-gray-900 mb-8">
+                Related Posts
+              </h3>
+              <div className="grid md:grid-cols-3 gap-6">
+                {relatedBlogs.map((related) => (
+                  <RelatedBlogCard key={related.id} related={related} formatDate={formatDate} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
+  );
+};
+
+const RelatedBlogCard = ({ related, formatDate }) => {
+  const [isLoaded, setIsLoaded] = React.useState(false);
+
+  return (
+    <Link href={`/blog/${related.slug}`} className="group block relative">
+      {!isLoaded && <BlogCardSkeleton />}
+      <div className={!isLoaded ? "invisible absolute inset-0" : "visible"}>
+        {related.image && (
+          <div className="mb-4 rounded-xl overflow-hidden aspect-video">
+            <img
+              src={`/storage/${related.image}`}
+              alt={related.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              onLoad={() => setIsLoaded(true)}
+            />
+          </div>
+        )}
+        <div className="text-sm text-gray-500 mb-2">
+          {formatDate(related.created_at)}
+        </div>
+        <h4 className="font-bold text-gray-900 group-hover:text-red transition-colors line-clamp-2">
+          {related.title}
+        </h4>
+      </div>
+    </Link>
   );
 };
 

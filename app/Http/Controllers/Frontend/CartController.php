@@ -87,7 +87,7 @@ class CartController extends Controller
         }
 
         $variantTotal = $sizePrice + $colorPrice;
-        $basePrice = ($product->offer_price && $product->offer_price > 0) ? $product->offer_price : $product->price;
+        $basePrice = $product->effective_price;
 
         /* Auth / Session */
         $userId = auth('customer')->id();
@@ -147,7 +147,7 @@ class CartController extends Controller
             $item->options = $opt;
 
             // Calculate total with robust fallback
-            $basePrice = ($item->price && $item->price > 0) ? $item->price : (($item->product->offer_price && $item->product->offer_price > 0) ? $item->product->offer_price : ($item->product->price ?? 0));
+            $basePrice = ($item->price && $item->price > 0) ? $item->price : ($item->product->effective_price ?? 0);
             $item->total = ($basePrice + ($opt['variant_total'] ?? 0)) * $item->quantity;
         });
 

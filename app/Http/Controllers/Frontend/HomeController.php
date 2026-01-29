@@ -70,8 +70,17 @@ class HomeController extends Controller
                         'thumb_image',
                         'price',
                         'offer_price',
+                        'offer_start_date',
+                        'offer_end_date',
                         'qty'
                     )
+                    ->with(['campaignProducts' => function($cq) {
+                        $cq->whereHas('campaign', function($ccq) {
+                            $ccq->where('status', 1)
+                                ->where('start_date', '<=', now())
+                                ->where('end_date', '>=', now());
+                        });
+                    }])
                     ->withCount([
                         'colors' => fn($q) => $q->active(),
                         'sizes' => fn($q) => $q->active(),
@@ -103,8 +112,17 @@ class HomeController extends Controller
                     'thumb_image',
                     'price',
                     'offer_price',
+                    'offer_start_date',
+                    'offer_end_date',
                     'qty'
                 )
+                ->with(['campaignProducts' => function($cq) {
+                    $cq->whereHas('campaign', function($ccq) {
+                        $ccq->where('status', 1)
+                            ->where('start_date', '<=', now())
+                            ->where('end_date', '>=', now());
+                    });
+                }])
                 ->withCount([
                     'colors' => fn($q) => $q->active(),
                     'sizes' => fn($q) => $q->active(),

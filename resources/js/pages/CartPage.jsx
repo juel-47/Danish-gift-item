@@ -136,7 +136,7 @@ const CartPage = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <ShoppingBag size={32} className="text-[var(--color-red)]" />
+            <ShoppingBag size={32} className="text-red" />
             Your Cart
           </h1>
           <div className="flex items-center gap-6">
@@ -146,7 +146,7 @@ const CartPage = () => {
             {cartItems.length > 0 && (
                 <button 
                     onClick={handleClearCart}
-                    className="text-[var(--color-red)] hover:text-red-700 font-medium flex items-center gap-2 transition-colors border-b border-transparent hover:border-red"
+                    className="text-red hover:text-red-700 font-medium flex items-center gap-2 transition-colors border-b border-transparent hover:border-red"
                 >
                     <Trash2 size={18} />
                     <span>Clear All</span>
@@ -169,7 +169,7 @@ const CartPage = () => {
                     className="p-5 sm:p-6 flex flex-col sm:flex-row gap-5 border-b border-gray last:border-b-0"
                   >
                     {/* Image */}
-                    <div className="w-full sm:w-32 h-32 flex-shrink-0">
+                    <div className="w-full sm:w-32 h-32 shrink-0">
                       <img
                         src={`/${item.product?.thumb_image || item.options?.image || item.image}`}
                         alt={item.product?.name || item.name}
@@ -197,7 +197,7 @@ const CartPage = () => {
                           )}
                           <p className="text-lg font-semibold text-red mt-2">
                             {settings?.currency_icon || '€'}
-                            {(parseFloat(item.price && item.price > 0 ? item.price : (item.product?.offer_price && item.product?.offer_price > 0 ? item.product?.offer_price : (item.product?.price || 0)))).toFixed(2)}
+                            {(parseFloat(item.price && item.price > 0 ? item.price : (item.product?.effective_price || item.product?.price || 0))).toFixed(2)}
                           </p>
                         </div>
 
@@ -219,7 +219,7 @@ const CartPage = () => {
                           >
                             <Minus size={16} />
                           </button>
-                          <span className="px-4 py-2 font-medium min-w-[3rem] text-center">
+                          <span className="px-4 py-2 font-medium min-w-12 text-center">
                             {item.quantity}
                           </span>
                           <button

@@ -142,6 +142,10 @@ Route::controller(FooterController::class)->group(function () {
 Route::get('/blog', [BlogController::class, 'index'])->name('blog');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.details');
 
+//campaign routes
+Route::get('/campaign', [\App\Http\Controllers\Frontend\CampaignController::class, 'index'])->name('campaign.index');
+Route::get('/campaign/{slug}', [\App\Http\Controllers\Frontend\CampaignController::class, 'show'])->name('campaign.show');
+
 //carrer routes
 Route::get('carrer', [JobApplicationController::class, 'carrer'])->name('carrer');
 Route::post('job-apply', [JobApplicationController::class, 'store'])->name('job.apply.store');

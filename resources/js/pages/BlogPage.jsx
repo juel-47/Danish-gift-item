@@ -1,6 +1,58 @@
 // BlogPage.jsx
 import React from "react";
 import { Link, usePage } from "@inertiajs/react";
+import { BlogCardSkeleton } from "../components/Skeleton";
+
+const BlogCard = ({ post, formatDate, truncate }) => {
+  const [isImageLoaded, setIsImageLoaded] = React.useState(false);
+
+  return (
+    <article className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 flex flex-col h-full relative">
+      {!isImageLoaded && <BlogCardSkeleton />}
+      <div className={`flex flex-col h-full ${!isImageLoaded ? 'invisible absolute inset-0' : 'visible'}`}>
+        <div className="relative aspect-4/3 overflow-hidden">
+          <img
+            src={post.image ? `/storage/${post.image}` : "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=800"}
+            alt={post.title}
+            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+            onLoad={() => setIsImageLoaded(true)}
+          />
+          {post.category && (
+            <div className="absolute top-4 left-4">
+              <span className="bg-red text-white text-xs font-medium px-3 py-1 rounded-full">
+                {post.category.name}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="p-6 flex flex-col grow">
+          <time className="text-sm text-gray-500 mb-2 block">
+            {formatDate(post.created_at)}
+          </time>
+
+          <Link href={`/blog/${post.slug}`}>
+            <h2 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 hover:text-red transition-colors">
+              {post.title}
+            </h2>
+          </Link>
+
+          <p className="text-gray-600 mb-6 line-clamp-3 grow">
+            {truncate(post.description, 120)}
+          </p>
+
+          <Link
+            href={`/blog/${post.slug}`}
+            className="inline-flex items-center text-red font-medium hover:text-red-800 transition-colors mt-auto"
+          >
+            Read more
+            <span className="ml-2">→</span>
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
+};
 
 const BlogPage = () => {
   const { blogs, categories } = usePage().props;
@@ -61,49 +113,12 @@ const BlogPage = () => {
         {blogs.data && blogs.data.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {blogs.data.map((post) => (
-              <article
-                key={post.id}
-                className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 flex flex-col h-full"
-              >
-                <div className="relative aspect-4/3 overflow-hidden">
-                  <img
-                    src={post.image ? `/storage/${post.image}` : "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=800"}
-                    alt={post.title}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                  />
-                  {post.category && (
-                    <div className="absolute top-4 left-4">
-                      <span className="bg-red text-white text-xs font-medium px-3 py-1 rounded-full">
-                        {post.category.name}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="p-6 flex flex-col flex-grow">
-                  <time className="text-sm text-gray-500 mb-2 block">
-                    {formatDate(post.created_at)}
-                  </time>
-
-                  <Link href={`/blog/${post.slug}`}>
-                    <h2 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 hover:text-red transition-colors">
-                      {post.title}
-                    </h2>
-                  </Link>
-
-                  <p className="text-gray-600 mb-6 line-clamp-3 flex-grow">
-                    {truncate(post.description, 120)}
-                  </p>
-
-                  <Link
-                    href={`/blog/${post.slug}`}
-                    className="inline-flex items-center text-red font-medium hover:text-red-800 transition-colors"
-                  >
-                    Read more
-                    <span className="ml-2">→</span>
-                  </Link>
-                </div>
-              </article>
+              <BlogCard 
+                key={post.id} 
+                post={post} 
+                formatDate={formatDate} 
+                truncate={truncate} 
+              />
             ))}
           </div>
         ) : (

@@ -31,4 +31,28 @@ export const ProductCardSkeleton = () => {
     );
 }
 
+export const BlogCardSkeleton = () => {
+  return (
+    <div className="bg-white rounded-xl overflow-hidden shadow-md animate-pulse h-full flex flex-col">
+      {/* Image Placeholder */}
+      <div className="aspect-4/3 bg-gray-200"></div>
+      
+      {/* Content Placeholder */}
+      <div className="p-6 space-y-4 grow flex flex-col">
+        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+        <div className="space-y-2">
+          <div className="h-6 bg-gray-200 rounded w-full"></div>
+          <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+        </div>
+        <div className="space-y-2 grow">
+          <div className="h-4 bg-gray-200 rounded w-full"></div>
+          <div className="h-4 bg-gray-200 rounded w-full"></div>
+          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+        </div>
+        <div className="h-4 bg-gray-200 rounded w-24"></div>
+      </div>
+    </div>
+  );
+};
+
 export default Skeleton;

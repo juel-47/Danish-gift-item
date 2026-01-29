@@ -125,6 +125,8 @@
 
                             <li class="{{ setActive(['admin.coupons.*']) }}"><a class="nav-link"
                                     href="{{ route('admin.coupons.index') }}">Coupons</a></li>
+                            <li class="{{ setActive(['admin.campaign.*']) }}"><a class="nav-link"
+                                    href="{{ route('admin.campaign.index') }}">Campaign</a></li>
                             <li class="{{ setActive(['admin.promotions.*']) }}"><a class="nav-link"
                                     href="{{ route('admin.promotions.index') }}">Promotions</a></li>
                             <li class="{{ setActive(['admin.payment-settings.*']) }}"><a class="nav-link"

@@ -44,7 +44,7 @@ const Header = () => {
             icon: ShoppingBag,
             categories: dynamicCategories
         },
-        { label: "CAMPAIGN", path: "/campaigns", icon: null },
+        { label: "CAMPAIGN", path: "/campaign", icon: Gift },
         { label: "BLOG", path: "/blog", icon: null },
         { label: "LOCATE STORE", path: "/locate-store", icon: null },
     ];

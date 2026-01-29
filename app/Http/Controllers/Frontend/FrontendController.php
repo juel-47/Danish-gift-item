@@ -110,11 +110,20 @@ class FrontendController extends Controller
                 'price',
                 'qty',
                 'offer_price',
+                'offer_start_date',
+                'offer_end_date',
                 'thumb_image',
                 'category_id',
                 'sub_category_id',
                 'child_category_id'
             ])
+            ->with(['campaignProducts' => function($cq) {
+                $cq->whereHas('campaign', function($ccq) {
+                    $ccq->where('status', 1)
+                        ->where('start_date', '<=', now())
+                        ->where('end_date', '>=', now());
+                });
+            }])
             ->whereHas('category', function ($q) {
                 $q->where('status', 1);
             });
@@ -167,11 +176,20 @@ class FrontendController extends Controller
                 'price',
                 'qty',
                 'offer_price',
+                'offer_start_date',
+                'offer_end_date',
                 'thumb_image',
                 'category_id',
                 'sub_category_id',
                 'child_category_id'
             ])
+            ->with(['campaignProducts' => function($cq) {
+                $cq->whereHas('campaign', function($ccq) {
+                    $ccq->where('status', 1)
+                        ->where('start_date', '<=', now())
+                        ->where('end_date', '>=', now());
+                });
+            }])
             ->where('category_id', $category->id)
             ->whereNull('sub_category_id');
 
@@ -223,11 +241,20 @@ class FrontendController extends Controller
                 'price',
                 'qty',
                 'offer_price',
+                'offer_start_date',
+                'offer_end_date',
                 'thumb_image',
                 'category_id',
                 'sub_category_id',
                 'child_category_id'
             ])
+            ->with(['campaignProducts' => function($cq) {
+                $cq->whereHas('campaign', function($ccq) {
+                    $ccq->where('status', 1)
+                        ->where('start_date', '<=', now())
+                        ->where('end_date', '>=', now());
+                });
+            }])
             ->where('sub_category_id', $subcategory->id)
             ->whereNull('child_category_id');
 
@@ -279,11 +306,20 @@ class FrontendController extends Controller
                 'price',
                 'qty',
                 'offer_price',
+                'offer_start_date',
+                'offer_end_date',
                 'thumb_image',
                 'category_id',
                 'sub_category_id',
                 'child_category_id'
             ])
+            ->with(['campaignProducts' => function($cq) {
+                $cq->whereHas('campaign', function($ccq) {
+                    $ccq->where('status', 1)
+                        ->where('start_date', '<=', now())
+                        ->where('end_date', '>=', now());
+                });
+            }])
             ->where('child_category_id', $childcategory->id);
 
         $query = $this->applyFilters($query, $request);
@@ -335,6 +371,8 @@ class FrontendController extends Controller
                     'slug',
                     'price',
                     'offer_price',
+                    'offer_start_date',
+                    'offer_end_date',
                     'short_description',
                     'qty',
                     'category_id',
@@ -346,6 +384,13 @@ class FrontendController extends Controller
                 ->whereHas('category', function ($q) {
                     $q->where('status', 1);
                 })
+                ->with(['campaignProducts' => function($cq) {
+                    $cq->whereHas('campaign', function($ccq) {
+                        $ccq->where('status', 1)
+                            ->where('start_date', '<=', now())
+                            ->where('end_date', '>=', now());
+                    });
+                }])
 
                 /*RELATIONS (OPTIMIZED) */
 
@@ -386,10 +431,17 @@ class FrontendController extends Controller
 
         $relatedProducts = Product::query()
             ->active()
+            ->select('id', 'name', 'slug', 'category_id', 'thumb_image', 'price', 'offer_price', 'offer_start_date', 'offer_end_date', 'qty')
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->take(6)
-            ->with(['category:id,name', 'productImageGalleries'])
+            ->with(['category:id,name', 'productImageGalleries', 'campaignProducts' => function($cq) {
+                $cq->whereHas('campaign', function($ccq) {
+                    $ccq->where('status', 1)
+                        ->where('start_date', '<=', now())
+                        ->where('end_date', '>=', now());
+                });
+            }])
             ->withCount([
                 'colors' => fn($q) => $q->active(),
                 'sizes' => fn($q) => $q->active(),
@@ -420,7 +472,14 @@ class FrontendController extends Controller
                 'category:id,name,slug',
                 'colors:id,color_name,color_code,price,is_default',
                 'sizes:id,size_name,price,is_default',
-                'productImageGalleries:id,image,product_id,color_id'
+                'productImageGalleries:id,image,product_id,color_id',
+                'campaignProducts' => function($cq) {
+                    $cq->whereHas('campaign', function($ccq) {
+                        $ccq->where('status', 1)
+                            ->where('start_date', '<=', now())
+                            ->where('end_date', '>=', now());
+                    });
+                }
             ])
                 ->withCount([
                     'reviews' => fn($q) => $q->where('status', 1),

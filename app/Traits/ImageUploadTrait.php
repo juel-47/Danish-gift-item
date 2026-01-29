@@ -11,93 +11,93 @@ use Intervention\Image\ImageManager;
 
 trait ImageUploadTrait
 {
-    /** handle slider image file */
-    public function sliderImage(Request $request, $inputName, $path)
-    {
-        if ($request->hasFile($inputName)) {
-            $image = $request->{$inputName};
-            $ext = $image->getClientOriginalExtension();
-            $imageName = 'media_' . uniqid() . '.' . $ext;
+    // /** handle slider image file */
+    // public function sliderImage(Request $request, $inputName, $path)
+    // {
+    //     if ($request->hasFile($inputName)) {
+    //         $image = $request->{$inputName};
+    //         $ext = $image->getClientOriginalExtension();
+    //         $imageName = 'media_' . uniqid() . '.' . $ext;
             
-            // Save to storage/app/public/$path
-            $image->storeAs($path, $imageName, 'public');
+    //         // Save to storage/app/public/$path
+    //         $image->storeAs($path, $imageName, 'public');
             
-            return $path . '/' . $imageName;
-        }
-    }
+    //         return $path . '/' . $imageName;
+    //     }
+    // }
 
-    /** image upload handle with intervention */
-    public function uploadImage($request, $imageField, $directory, $width = 400, $height = 500)
-    {
-        if ($request->file($imageField)) {
-            $image = $request->file($imageField);
+    // /** image upload handle with intervention */
+    // public function uploadImage($request, $imageField, $directory, $width = 400, $height = 500)
+    // {
+    //     if ($request->file($imageField)) {
+    //         $image = $request->file($imageField);
 
-            $width = $width ?: 400;
-            $height = $height ?: 500;
+    //         $width = $width ?: 400;
+    //         $height = $height ?: 500;
 
-            $name_gen = hexdec(uniqid()) . '.' . $image->getClientOriginalExtension();
-            $manager = new ImageManager(new Driver());
-            $img = $manager->read($image);
+    //         $name_gen = hexdec(uniqid()) . '.' . $image->getClientOriginalExtension();
+    //         $manager = new ImageManager(new Driver());
+    //         $img = $manager->read($image);
             
-            // Resize and encode
-            $encoded = $img->resize($width, $height)->toJpeg(); // or keep original format if needed
+    //         // Resize and encode
+    //         $encoded = $img->resize($width, $height)->toJpeg(); // or keep original format if needed
             
-            $fullPath = $directory . '/' . $name_gen;
-            Storage::disk('public')->put($fullPath, (string) $encoded);
+    //         $fullPath = $directory . '/' . $name_gen;
+    //         Storage::disk('public')->put($fullPath, (string) $encoded);
             
-            return $fullPath;
-        }
-        return null;
-    }
+    //         return $fullPath;
+    //     }
+    //     return null;
+    // }
 
-    public function deleteImage($path)
-    {
-        if ($path) {
-            // Remove 'storage/' prefix if it's there (from accessor)
-            if (str_starts_with($path, 'storage/')) {
-                $path = substr($path, 8);
-            }
+    // public function deleteImage($path)
+    // {
+    //     if ($path) {
+    //         // Remove 'storage/' prefix if it's there (from accessor)
+    //         if (str_starts_with($path, 'storage/')) {
+    //             $path = substr($path, 8);
+    //         }
             
-            if (Storage::disk('public')->exists($path)) {
-                Storage::disk('public')->delete($path);
-            }
-        }
-    }
+    //         if (Storage::disk('public')->exists($path)) {
+    //             Storage::disk('public')->delete($path);
+    //         }
+    //     }
+    // }
 
-    /** multiple image upload */
-    public function uploadMultiImage(Request $request, $inputName, $directory, $width = 400, $height = 500)
-    {
-        $imagepaths = [];
-        if ($request->hasFile($inputName)) {
-            $images = $request->{$inputName};
-            foreach ($images as $image) {
-                $name_gen = hexdec(uniqid()) . '.' . $image->getClientOriginalExtension();
-                $manager = new ImageManager(new Driver());
-                $img = $manager->read($image);
+    // /** multiple image upload */
+    // public function uploadMultiImage(Request $request, $inputName, $directory, $width = 400, $height = 500)
+    // {
+    //     $imagepaths = [];
+    //     if ($request->hasFile($inputName)) {
+    //         $images = $request->{$inputName};
+    //         foreach ($images as $image) {
+    //             $name_gen = hexdec(uniqid()) . '.' . $image->getClientOriginalExtension();
+    //             $manager = new ImageManager(new Driver());
+    //             $img = $manager->read($image);
                 
-                $encoded = $img->resize($width, $height)->toJpeg();
-                $fullPath = $directory . '/' . $name_gen;
+    //             $encoded = $img->resize($width, $height)->toJpeg();
+    //             $fullPath = $directory . '/' . $name_gen;
                 
-                Storage::disk('public')->put($fullPath, (string) $encoded);
-                $imagepaths[] = $fullPath;
-            }
-            return $imagepaths;
-        }
-    }
+    //             Storage::disk('public')->put($fullPath, (string) $encoded);
+    //             $imagepaths[] = $fullPath;
+    //         }
+    //         return $imagepaths;
+    //     }
+    // }
 
-    /** update image */
-    public function updateImage($request, $imageField, $directory, $oldImage = null, $width = 400, $height = 500)
-    {
-        if ($request->file($imageField)) {
-            if ($oldImage) {
-                $this->deleteImage($oldImage);
-            }
+    // /** update image */
+    // public function updateImage($request, $imageField, $directory, $oldImage = null, $width = 400, $height = 500)
+    // {
+    //     if ($request->file($imageField)) {
+    //         if ($oldImage) {
+    //             $this->deleteImage($oldImage);
+    //         }
 
-            return $this->uploadImage($request, $imageField, $directory, $width, $height);
-        }
+    //         return $this->uploadImage($request, $imageField, $directory, $width, $height);
+    //     }
 
-        return $oldImage;
-    }
+    //     return $oldImage;
+    // }
 
     /** Special image upload (SVG, WebP, GIF, etc.) */
     public function uploadSpecialImage($request, $imageField, $directory, $oldImage = null)

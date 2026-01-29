@@ -19,8 +19,8 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
     ...product,
     description: product.long_description || product.description,
     shortDesc: product.short_description || product.shortDesc,
-    price: (product.offer_price && product.offer_price > 0) ? product.offer_price : (product.price || 0),
-    oldPrice: (product.offer_price && product.offer_price > 0) ? product.price : null,
+    price: product.effective_price || product.price || 0,
+    oldPrice: product.effective_price < product.price ? product.price : null,
     rating: Number(product.reviews_avg_rating) || 0,
     reviewCount: Number(product.reviews_count) || reviews.length || 0,
     colors: product.colors || [],
@@ -57,6 +57,13 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
   const [isAdding, setIsAdding] = useState(false);
   const [isBuying, setIsBuying] = useState(false);
 
+  // Reset states when product changes
+  React.useEffect(() => {
+    setSelectedImage(0);
+    setImageError({});
+    setIsLargeImageLoading(true);
+  }, [product.id]);
+
   // Sync selection once product is loaded
   React.useEffect(() => {
     if (derivedColors.length > 0 && !selectedColor) {
@@ -82,18 +89,26 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
   const formatImagePath = (path) => {
     if (!path) return null;
     if (path.startsWith('http')) return path;
-    if (path.startsWith('/storage/')) return path;
-    if (path.startsWith('storage/')) return `/${path}`;
-    return `/storage/${path}`;
+    if (path.startsWith('/storage/') || path.startsWith('/uploads/')) return path;
+    if (path.startsWith('storage/') || path.startsWith('uploads/')) return `/${path}`;
+    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    return `/storage/${cleanPath}`;
   };
 
   // Process all gallery images for the thumbnails
   const currentImages = React.useMemo(() => {
-    return (product.product_image_galleries || []).map(item => formatImagePath(item.image));
-  }, [product.product_image_galleries]);
+    const galleryImages = (product.product_image_galleries || []).map(item => formatImagePath(item.image));
+    if (galleryImages.length > 0) return galleryImages;
+    return [formatImagePath(product.thumb_image)].filter(Boolean);
+  }, [product.product_image_galleries, product.thumb_image]);
 
   const NoImageSkeleton = ({ className = "" }) => (
-    <Skeleton className={`w-full h-full ${className}`} />
+    <div className={`w-full h-full bg-gray-100 flex flex-col items-center justify-center gap-3 p-6 ${className}`}>
+        <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.587-1.587a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <span className="text-sm font-medium text-gray-400 uppercase tracking-widest">No Image available</span>
+    </div>
   );
 
   const handleReviewSubmit = (e) => {
@@ -230,6 +245,17 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
             <div className="bg-white rounded-xl overflow-hidden border border-gray shadow-sm aspect-square relative">
               {currentImageUrl && !imageError[selectedImage] ? (
                 <>
+                  {/* Use a hidden img tag to reliably detect load/error states */}
+                  <img 
+                    src={currentImageUrl}
+                    alt=""
+                    className="hidden"
+                    onLoad={() => setIsLargeImageLoading(false)}
+                    onError={() => {
+                        setIsLargeImageLoading(false);
+                        setImageError(prev => ({ ...prev, [selectedImage]: true }));
+                    }}
+                  />
                   {isLargeImageLoading && (
                     <Skeleton className="absolute inset-0 z-10" />
                   )}
@@ -237,7 +263,6 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
                     src={currentImageUrl}  
                     alt={`${normalizedProduct.name} - ${selectedColor}`}
                     zoom="200"   
-                    onLoad={() => setIsLargeImageLoading(false)}
                     className={`w-full h-full object-contain ${isLargeImageLoading ? 'opacity-0' : 'opacity-100'}`}
                   />
                 </>
@@ -298,13 +323,23 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
               </h1>
 
               <div className="mt-3 flex flex-wrap items-center gap-4">
+                {product.active_campaign_product && (
+                    <div className="w-full mb-1">
+                        <span className="bg-red text-white text-xs font-bold px-3 py-1 rounded shadow-sm uppercase">
+                            {product.active_campaign_product.discount_type === 'percentage' 
+                                ? `${Math.round(product.active_campaign_product.discount_value)}% OFF` 
+                                : `SAVE ${product.active_campaign_product.discount_value} ${settings?.currency_icon || 'DKK.'}`}
+                            {" "} - CAMPAIGN PRICE
+                        </span>
+                    </div>
+                )}
                 <div className="flex items-center gap-3">
                   <span className="text-3xl md:text-4xl font-bold text-red">
-                    {settings?.currency_icon || 'DKK'} {normalizedProduct.price}
+                    {settings?.currency_icon || 'DKK.'}{normalizedProduct.price}
                   </span>
                   {normalizedProduct.oldPrice && normalizedProduct.oldPrice > 0 && (
                     <span className="text-xl text-gray-500 line-through">
-                      {settings?.currency_icon || 'DKK'} {normalizedProduct.oldPrice}
+                      {settings?.currency_icon || 'DKK.'}{normalizedProduct.oldPrice}
                     </span>
                   )}
                 </div>

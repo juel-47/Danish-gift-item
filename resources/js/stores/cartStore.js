@@ -34,9 +34,9 @@ export const useCartStore = create(
                     // If item price is missing, NaN, or 0, check the attached product info
                     if (isNaN(basePrice) || basePrice <= 0) {
                         const prod = i.product || {};
-                        const offerPrice = parseFloat(prod.offer_price);
+                        const effectivePrice = parseFloat(prod.effective_price);
                         const regularPrice = parseFloat(prod.price);
-                        basePrice = (!isNaN(offerPrice) && offerPrice > 0) ? offerPrice : (!isNaN(regularPrice) ? regularPrice : 0);
+                        basePrice = (!isNaN(effectivePrice) && effectivePrice > 0) ? effectivePrice : (!isNaN(regularPrice) ? regularPrice : 0);
                     }
                     
                     if (isNaN(basePrice)) basePrice = 0;
@@ -152,7 +152,7 @@ export const useCartStore = create(
                                 product_id: product.id,
                                 name: product.name,
                                 // Use offer_price if available, otherwise regular price
-                                price: (product.offer_price && parseFloat(product.offer_price) > 0) ? product.offer_price : product.price,
+                                price: (product.effective_price && parseFloat(product.effective_price) > 0) ? product.effective_price : product.price,
                                 product: product, // Store product for better recalculation fallbacks
                                 quantity: Number(quantity),
                                 options: {

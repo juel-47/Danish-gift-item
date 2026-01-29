@@ -106,19 +106,29 @@ const ProductCard = ({ product, onImageLoad, forceLoading = false }) => {
           </h3>
         </Link>
 
-        <div className="mt-2 flex items-center gap-2">
-            {product.offer_price && product.offer_price > 0 ? (
+
+        <div className="mt-2 flex flex-col">
+            {product.effective_price < product.price ? (
                 <>
-                    <span className="text-base font-bold text-red">
-                        {currencyIcon || '$'}{product.offer_price}
-                    </span>
-                    <span className="text-xs text-gray-400 line-through">
-                        {currencyIcon || '$'}{product.price}
-                    </span>
+                    {product.active_campaign_product && (
+                        <div className="text-[10px] font-bold text-red uppercase mb-0.5">
+                            {product.active_campaign_product.discount_type === 'percentage' 
+                                ? `SAVE ${Math.round(product.active_campaign_product.discount_value)}%` 
+                                : `SAVE ${product.active_campaign_product.discount_value} ${currencyIcon || 'DKK.'}`}
+                        </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                        <span className="text-base font-bold text-gray-900">
+                            {currencyIcon || 'DKK.'}{product.effective_price}
+                        </span>
+                        <span className="text-xs text-gray-400 line-through">
+                            {currencyIcon || 'DKK.'}{product.price}
+                        </span>
+                    </div>
                 </>
             ) : (
                 <span className="text-base font-bold text-gray-900">
-                    {currencyIcon || '$'}{product.price}
+                    {currencyIcon || 'DKK.'}{product.price}
                 </span>
             )}
         </div>

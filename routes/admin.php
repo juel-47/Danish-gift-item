@@ -8,6 +8,7 @@ use App\Http\Controllers\Backend\BlogCategoryController;
 use App\Http\Controllers\Backend\BlogController;
 use App\Http\Controllers\Backend\BranchController;
 use App\Http\Controllers\Backend\BrandController;
+use App\Http\Controllers\Backend\CampaignController;
 use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\ChildCategoryController;
 use App\Http\Controllers\Backend\CodSettingController;
@@ -305,6 +306,15 @@ Route::middleware(['web', 'auth', 'verified', 'check.permission'])->prefix('admi
 
         /** pickup_shipping route */
         Route::resource('pickup-shipping', PickupShippingController::class);
+
+        /** Campaign routes */
+        Route::controller(CampaignController::class)->group(function () {
+            Route::put('campaign/change-status', 'changeStatus')->name('campaign.change-status');
+            Route::get('campaign/{id}/products', 'productsIndex')->name('campaign.products.index');
+            Route::post('campaign/add-product', 'addProduct')->name('campaign.add-product');
+            Route::delete('campaign/remove-product/{id}', 'removeProduct')->name('campaign.remove-product');
+        });
+        Route::resource('campaign', CampaignController::class);
     });
 });
 Route::prefix('employee')->name('employee.')->middleware(['auth', 'employee.access'])->group(function () {
