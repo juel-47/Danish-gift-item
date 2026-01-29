@@ -125,7 +125,7 @@ Route::get('mobilepay/cancel', [PaymentController::class, 'mobilePayCancel'])->n
 // page routes 
 Route::controller(PageController::class)->group(function () {
     Route::get('/about', 'about')->name('about');
-    Route::get('/contact', 'branch')->name('contact');
+    Route::get('/contact', 'contact')->name('contact');
     Route::post('/contact', 'handleContactForm')->name('contact-form.submit');
 });
 //footer routes

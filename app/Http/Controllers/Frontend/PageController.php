@@ -54,19 +54,23 @@ class PageController extends Controller
         return redirect()->back()->with('success', 'Your message has been sent successfully');
     }
 
-    public function branch()
-    {
-        $branch = Branch::where('status', 1)->get(['id', 'name', 'location_url', 'description']);
-        $footer = Cache::remember('footer_data', 3600, function () {
-            return FooterInfo::select('logo', 'phone', 'email', 'address', 'copyright')
-                ->get()
-                ->map(function ($item) {
-                    return $item->only(['logo', 'phone', 'email', 'address', 'copyright']);
-                })->first();
-        });
-        return Inertia::render('ContactPage', [
-            'branches' => $branch,
-            'footer_info' => $footer
-        ]);
+    // public function branch()
+    // {
+    //     $branch = Branch::where('status', 1)->get(['id', 'name', 'location_url', 'description']);
+    //     $footer = Cache::remember('footer_data', 3600, function () {
+    //         return FooterInfo::select('logo', 'phone', 'email', 'address', 'copyright')
+    //             ->get()
+    //             ->map(function ($item) {
+    //                 return $item->only(['logo', 'phone', 'email', 'address', 'copyright']);
+    //             })->first();
+    //     });
+    //     return Inertia::render('ContactPage', [
+    //         'branches' => $branch,
+    //         'footer_info' => $footer
+    //     ]);
+    // }
+
+    public function contact(){
+        return Inertia::render('ContactPage');
     }
 }

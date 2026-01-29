@@ -58,12 +58,12 @@ const AllCampaignProductsPage = ({ products, filters }) => {
               <span className="mx-2">/</span>
               <Link href="/campaign" className="hover:underline">Campaigns</Link>
               <span className="mx-2">/</span>
-              <span className="font-bold">All Campaign Products</span>
+              <span className="font-semibold">All Campaign Products</span>
             </nav>
 
             <div className="flex flex-col md:flex-row justify-between items-center gap-6">
               <div className="text-center md:text-left">
-                <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter">
+                <h1 className="text-1xl md:text-2xl font-black uppercase tracking-tighter">
                   All Campaign Products
                 </h1>
                 <p className="mt-2 text-lg md:text-xl opacity-90 max-w-2xl">
