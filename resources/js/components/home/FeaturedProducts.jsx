@@ -1,4 +1,5 @@
 // FeaturedProducts.jsx
+import { Link } from "@inertiajs/react";
 import ProductCard from "../ProductCard";
 
  
@@ -12,9 +13,9 @@ export default function FeaturedProducts({products}) {
             FEATURED PRODUCTS
           </h2>
 
-          <button className="bg-red text-white px-6 py-2.5 rounded-full text-sm md:text-base font-medium hover:bg-red-800 transition-colors duration-300 whitespace-nowrap">
+          <Link href="/all-products" className="bg-red text-white px-6 py-2.5 rounded-full text-sm md:text-base font-medium hover:bg-red-800 transition-colors duration-300 whitespace-nowrap">
             View All
-          </button>
+          </Link>
         </div>
 
         {/* Products Grid */}

@@ -54,6 +54,36 @@ const ProductPage = ({ products, filters, categories = [], brands = [], colors =
   };
   // ---------------------------
 
+  // Helper to check if a filter value is active
+  const isFilterActive = (type, id) => {
+    const key = type === 'categories' ? 'category_ids' : 
+                type === 'brands' ? 'brand_ids' : 
+                type === 'colors' ? 'color_ids' : 
+                type === 'sizes' ? 'size_ids' : type;
+    
+    const value = filters[key];
+    if (!value) return false;
+    
+    if (Array.isArray(value)) {
+      return value.map(String).includes(String(id));
+    }
+    return String(value) === String(id);
+  };
+
+  // Sync activeFilters (local state) with props (URL filters)
+  useEffect(() => {
+    setActiveFilters(prev => ({
+      ...prev,
+      price_min: filters.min_price || 0,
+      price_max: filters.max_price || 2000,
+      colors: Array.isArray(filters.color_ids) ? filters.color_ids : (filters.color_ids ? [filters.color_ids] : []),
+      sizes: Array.isArray(filters.size_ids) ? filters.size_ids : (filters.size_ids ? [filters.size_ids] : []),
+      categories: Array.isArray(filters.category_ids) ? filters.category_ids : (filters.category_ids ? [filters.category_ids] : []),
+      brands: Array.isArray(filters.brand_ids) ? filters.brand_ids : (filters.brand_ids ? [filters.brand_ids] : []),
+      sort: filters.sort_by || "latest",
+    }));
+  }, [filters]);
+
   // Helper to trigger Inertia request for filtering
   const applyFilters = (newFilters) => {
     router.get(route('all.products'), newFilters, {
@@ -69,14 +99,22 @@ const ProductPage = ({ products, filters, categories = [], brands = [], colors =
                 type === 'colors' ? 'color_ids' : 
                 type === 'sizes' ? 'size_ids' : type;
 
-    const currentValues = filters[key] || [];
-    const newValues = currentValues.includes(String(value))
-      ? currentValues.filter((v) => v !== String(value))
-      : [...currentValues, String(value)];
+    const rawValue = filters[key] || [];
+    const currentValues = Array.isArray(rawValue) ? rawValue.map(String) : [String(rawValue)];
+    const strValue = String(value);
 
+    let newValues;
+    if (currentValues.includes(strValue)) {
+      newValues = currentValues.filter((v) => v !== strValue);
+    } else {
+      newValues = [...currentValues, strValue];
+    }
+
+    // If newValues is empty, we should remove the key entirely or send empty array
+    // Laravel/Inertia handles empty array as removing the param usually
     const updatedFilters = {
       ...filters,
-      [key]: newValues,
+      [key]: newValues.length > 0 ? newValues : undefined,
       page: 1 // Reset pagination on filter change
     };
 
@@ -155,10 +193,10 @@ const ProductPage = ({ products, filters, categories = [], brands = [], colors =
         {/* Active Filters */}
         {(Object.keys(filters).length > 0 && !(Object.keys(filters).length === 1 && filters.page)) && (
           <div className="flex flex-wrap gap-2 mb-6">
-            {categories.filter(c => filters.category_ids?.includes(String(c.id))).map((cat) => (
+            {categories.filter(c => isFilterActive("categories", c.id)).map((cat) => (
               <div
                 key={cat.id}
-                className="bg-red-50 text-[var(--color-red)] px-4 py-1.5 rounded-full text-sm flex items-center gap-2"
+                className="bg-red-50 text-red px-4 py-1.5 rounded-full text-sm flex items-center gap-2"
               >
                 {cat.name}
                 <button
@@ -170,10 +208,10 @@ const ProductPage = ({ products, filters, categories = [], brands = [], colors =
               </div>
             ))}
 
-            {brands.filter(b => filters.brand_ids?.includes(String(b.id))).map((brand) => (
+            {brands.filter(b => isFilterActive("brands", b.id)).map((brand) => (
               <div
                 key={brand.id}
-                className="bg-red-50 text-[var(--color-red)] px-4 py-1.5 rounded-full text-sm flex items-center gap-2"
+                className="bg-red-50 text-red px-4 py-1.5 rounded-full text-sm flex items-center gap-2"
               >
                 {brand.name}
                 <button
@@ -185,10 +223,10 @@ const ProductPage = ({ products, filters, categories = [], brands = [], colors =
               </div>
             ))}
 
-            {colors.filter(c => filters.color_ids?.includes(String(c.id))).map((color) => (
+            {colors.filter(c => isFilterActive("colors", c.id)).map((color) => (
               <div
                 key={color.id}
-                className="bg-red-50 text-[var(--color-red)] px-4 py-1.5 rounded-full text-sm flex items-center gap-2"
+                className="bg-red-50 text-red px-4 py-1.5 rounded-full text-sm flex items-center gap-2"
               >
                 {color.color_name}
                 <button
@@ -200,10 +238,10 @@ const ProductPage = ({ products, filters, categories = [], brands = [], colors =
               </div>
             ))}
 
-            {sizes.filter(s => filters.size_ids?.includes(String(s.id))).map((size) => (
+            {sizes.filter(s => isFilterActive("sizes", s.id)).map((size) => (
               <div
                 key={size.id}
-                className="bg-red-50 text-[var(--color-red)] px-4 py-1.5 rounded-full text-sm flex items-center gap-2"
+                className="bg-red-50 text-red px-4 py-1.5 rounded-full text-sm flex items-center gap-2"
               >
                 Size {size.size_name}
                 <button
@@ -217,7 +255,7 @@ const ProductPage = ({ products, filters, categories = [], brands = [], colors =
 
             <button
               onClick={clearAllFilters}
-              className="text-gray-600 hover:text-[var(--color-red)] text-sm underline ml-2"
+              className="text-gray-600 hover:text-red text-sm underline ml-2"
             >
               Clear all
             </button>
@@ -227,7 +265,7 @@ const ProductPage = ({ products, filters, categories = [], brands = [], colors =
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block lg:col-span-3">
-            <div className="bg-white p-6 rounded-xl border border-[var(--color-gray)] sticky top-6">
+            <div className="bg-white p-6 rounded-xl border border-gray sticky top-6">
               <h3 className="text-lg font-bold mb-6">Filters</h3>
 
               {/* Price Range */}
@@ -262,9 +300,9 @@ const ProductPage = ({ products, filters, categories = [], brands = [], colors =
                     >
                       <input
                         type="checkbox"
-                        checked={filters.category_ids?.includes(String(cat.id))}
+                        checked={isFilterActive("categories", cat.id)}
                         onChange={() => toggleFilter("categories", cat.id)}
-                        className="h-4 w-4 text-[var(--color-red)] border-gray-300 rounded"
+                        className="h-4 w-4 text-red border-gray-300 rounded"
                       />
                       <span className="text-gray-700">{cat.name}</span>
                     </label>
@@ -283,9 +321,9 @@ const ProductPage = ({ products, filters, categories = [], brands = [], colors =
                     >
                       <input
                         type="checkbox"
-                        checked={filters.brand_ids?.includes(String(brand.id))}
+                        checked={isFilterActive("brands", brand.id)}
                         onChange={() => toggleFilter("brands", brand.id)}
-                        className="h-4 w-4 text-[var(--color-red)] border-gray-300 rounded"
+                        className="h-4 w-4 text-red border-gray-300 rounded"
                       />
                       <span className="text-gray-700">{brand.name}</span>
                     </label>
@@ -302,8 +340,8 @@ const ProductPage = ({ products, filters, categories = [], brands = [], colors =
                       key={c.id}
                       onClick={() => toggleFilter("colors", c.id)}
                       className={`w-10 h-10 rounded-full border-2 transition-all ${
-                        filters.color_ids?.includes(String(c.id))
-                          ? "border-[var(--color-red)] scale-110 shadow-md"
+                        isFilterActive("colors", c.id)
+                          ? "border-red scale-110 shadow-md"
                           : "border-gray-300 hover:border-gray-400"
                       }`}
                       style={{
@@ -324,9 +362,9 @@ const ProductPage = ({ products, filters, categories = [], brands = [], colors =
                       key={s.id}
                       onClick={() => toggleFilter("sizes", s.id)}
                       className={`border rounded-md py-2 text-sm font-medium transition-all ${
-                        filters.size_ids?.includes(String(s.id))
-                          ? "border-[var(--color-red)] bg-red-50 text-[var(--color-red)]"
-                          : "border-[var(--color-gray)] hover:border-[var(--color-red)]"
+                        isFilterActive("sizes", s.id)
+                          ? "border-red bg-red-50 text-red"
+                          : "border-gray hover:border-red"
                       }`}
                     >
                       {s.size_name}
@@ -399,7 +437,7 @@ const ProductPage = ({ products, filters, categories = [], brands = [], colors =
                       >
                         <input
                           type="checkbox"
-                          checked={filters.category_ids?.includes(String(cat.id))}
+                          checked={isFilterActive("categories", cat.id)}
                           onChange={() => toggleFilter("categories", cat.id)}
                           className="h-5 w-5 text-red border-gray-300 rounded"
                         />
@@ -420,7 +458,7 @@ const ProductPage = ({ products, filters, categories = [], brands = [], colors =
                       >
                         <input
                           type="checkbox"
-                          checked={filters.brand_ids?.includes(String(brand.id))}
+                          checked={isFilterActive("brands", brand.id)}
                           onChange={() => toggleFilter("brands", brand.id)}
                           className="h-5 w-5 text-red border-gray-300 rounded"
                         />
@@ -439,8 +477,8 @@ const ProductPage = ({ products, filters, categories = [], brands = [], colors =
                         key={c.id}
                         onClick={() => toggleFilter("colors", c.id)}
                         className={`w-12 h-12 rounded-full border-2 transition-all ${
-                          filters.color_ids?.includes(String(c.id))
-                            ? "border-[var(--color-red)] scale-110 shadow-md"
+                          isFilterActive("colors", c.id)
+                            ? "border-red scale-110 shadow-md"
                             : "border-gray-300 hover:border-gray-400"
                         }`}
                         style={{
@@ -460,9 +498,9 @@ const ProductPage = ({ products, filters, categories = [], brands = [], colors =
                         key={s.id}
                         onClick={() => toggleFilter("sizes", s.id)}
                         className={`border rounded-md py-3 text-base font-medium transition-all ${
-                          filters.size_ids?.includes(String(s.id))
-                            ? "border-[var(--color-red)] bg-red-50 text-[var(--color-red)]"
-                            : "border-[var(--color-gray)] hover:border-[var(--color-red)]"
+                          isFilterActive("sizes", s.id)
+                            ? "border-red bg-red-50 text-red"
+                            : "border-gray hover:border-red"
                         }`}
                       >
                         {s.size_name}

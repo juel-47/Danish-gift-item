@@ -93,19 +93,19 @@ const LegalNotice = () => {
                     <div>
                       <p className="font-semibold text-black/75">Email</p>
                       <p className="text-black/50 text-sm">
-                        <Link
+                        <a
                           href={`mailto:${companyEmail}`}
                           className=" underline"
                         >
                           {companyEmail}
-                        </Link>
+                        </a>
                         <br />
-                        <Link
+                        <a  
                           href={`mailto:${supportEmail}`}
                           className="underline"
                         >
                           {supportEmail}
-                        </Link>
+                        </a>
                       </p>
                     </div>
                   </div>
@@ -114,12 +114,12 @@ const LegalNotice = () => {
                     <FaPhoneAlt className="text-2xl text-cream mt-1" />
                     <div>
                       <p className="font-semibold text-black/75">Phone</p>
-                      <Link
+                      <a
                         href={`tel:${companyPhone}`}
                         className="text-black/50 text-sm underline"
                       >
                         {companyPhone}
-                      </Link>
+                      </a>
                     </div>
                   </div>
                 </div>

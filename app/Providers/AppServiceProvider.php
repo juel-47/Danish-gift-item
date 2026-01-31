@@ -62,6 +62,9 @@ class AppServiceProvider extends ServiceProvider
             // dd($mailSetting);
 
             if ($mailSetting) {
+                // Force SMTP as the default mailer
+                Config::set('mail.default', 'smtp');
+                
                 Config::set('mail.mailers.smtp.host', $mailSetting->host);
                 Config::set('mail.mailers.smtp.port', $mailSetting->port);
                 Config::set('mail.mailers.smtp.encryption', $mailSetting->encryption);

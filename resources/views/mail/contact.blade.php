@@ -191,7 +191,7 @@
 
         New Contact Message
       </h1>
-      <p>You've received a new message from your website {{ $settings->site_name ?? 'Your Website' }} contact form</p>
+      <p>You've received a new message from your website {{ optional($settings)->site_name ?? 'Your Website' }} contact form</p>
     </div>
 
     <!-- Email Body -->

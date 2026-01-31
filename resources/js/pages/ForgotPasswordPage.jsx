@@ -1,9 +1,12 @@
 // ForgotPasswordPage.jsx
 import React from "react";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
-import { Link, useForm, Head } from "@inertiajs/react";
+import { Link, useForm, Head, usePage } from "@inertiajs/react";
 
 const ForgotPasswordPage = () => {
+  const {props} = usePage();
+  const {footerInfo} = props;
+ const supportEmail=footerInfo?.email || "";
   const { data, setData, post, processing, errors, wasSuccessful } = useForm({
     email: "",
   });
@@ -169,10 +172,10 @@ const ForgotPasswordPage = () => {
           <p>
             Need help? Contact us at{" "}
             <a
-              href="mailto:support@danishsouvenirs.dk"
+              href={`mailto:${supportEmail}`}
               className="text-[var(--color-red)] hover:text-red-800"
             >
-              support@danishsouvenirs.dk
+              {supportEmail}
             </a>
           </p>
         </div>

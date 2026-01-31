@@ -52,7 +52,7 @@ const ResendEmail = ({ email }) => {
                         Check Your Email
                     </h2>
 
-                    <p className="text-gray-300 text-center text-sm leading-relaxed mb-8">
+                    <p className="text-gray-800 text-center text-sm leading-relaxed mb-8">
                         We’ve sent a verification link to
                         <br />
                         <span className="text-cream font-medium">
@@ -81,7 +81,7 @@ const ResendEmail = ({ email }) => {
                         <div className="text-center">
                             <Link
                                 href={route('customer.login')}
-                                className="text-indigo-400 hover:underline text-sm"
+                                className="text-gray-800 hover:underline text-sm"
                             >
                                 Back to Sign In
                             </Link>

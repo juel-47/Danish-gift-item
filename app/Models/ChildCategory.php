@@ -19,4 +19,19 @@ class ChildCategory extends Model
     {
         return $qury->where('status', 1);
     }
+
+    protected static function booted()
+    {
+        static::saved(function ($childCategory) {
+            \Illuminate\Support\Facades\Cache::forget('categories');
+            \Illuminate\Support\Facades\Cache::forget('home_products');
+            \Illuminate\Support\Facades\Cache::forget('shared_categories_tree');
+        });
+
+        static::deleted(function ($childCategory) {
+            \Illuminate\Support\Facades\Cache::forget('categories');
+            \Illuminate\Support\Facades\Cache::forget('home_products');
+            \Illuminate\Support\Facades\Cache::forget('shared_categories_tree');
+        });
+    }
 }

@@ -30,6 +30,9 @@ class BranchDataTable extends DataTable
             ->addColumn('description', function ($query) {
                 return limitText($query->description, 40);
             })
+            ->addColumn('image', function ($query) {
+                return $query->image ? "<img width='100px' src='" . asset($query->image) . "'></img>" : '';
+            })
             ->addColumn('status', function ($query) {
                 if ($query->status == 1) {
                     $activeButton = '<label class="custom-switch mt-2">
@@ -44,7 +47,7 @@ class BranchDataTable extends DataTable
                 }
                 return $activeButton;
             })
-            ->rawColumns(['action', 'status', 'description'])
+            ->rawColumns(['action', 'status', 'description', 'image'])
             ->setRowId('id');
     }
 
@@ -86,6 +89,7 @@ class BranchDataTable extends DataTable
     {
         return [
             Column::make('id'),
+            Column::make('image'),
             Column::make('name'),
             Column::make('description')->width(200),
             Column::make('status'),

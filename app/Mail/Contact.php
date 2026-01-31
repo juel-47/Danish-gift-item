@@ -29,20 +29,16 @@ class Contact extends Mailable
     public function envelope(): Envelope
     {
         // Example: dynamic subject and replyTo from incoming contact data
-        $subject = $this->data['subject'] ?? 'New Contact Message';
-        $replyToEmail = $this->data['email'] ?? null;
-        $replyToName = trim(($this->data['first_name'] ?? '') . ' ' . ($this->data['last_name'] ?? ''));
+        $fromAddress = $this->data['email'] ?? null;
+        $fromName = trim(($this->data['first_name'] ?? '') . ' ' . ($this->data['last_name'] ?? ''));
+        $displaySubject = ($this->data['subject'] ?? 'New Contact Message') . ($fromAddress ? " from {$fromAddress}" : "");
 
-        $replyTo = $replyToEmail
-            ? [new Address($replyToEmail, $replyToName ?: null)]
+        $replyTo = $fromAddress
+            ? [new Address($fromAddress, $fromName ?: null)]
             : [];
 
-        // Optionally set From if you want to override default MAIL_FROM
-        // $from = new Address('no-reply@yourdomain.com', 'Your App');
-
         return new Envelope(
-            subject: $subject,
-            // from: $from, // uncomment if you want a custom From
+            subject: $displaySubject,
             replyTo: $replyTo,
         );
         // return new Envelope(
@@ -60,6 +56,7 @@ class Contact extends Mailable
 
             with: [
                 'data' => $this->data,
+                'settings' => \App\Models\GeneralSetting::first(),
             ],
         );
     }

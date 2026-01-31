@@ -51,7 +51,7 @@ class PageController extends Controller
         // Send mail
         Mail::to($setting->email)->send(new Contact($mailData));
 
-        return redirect()->back()->with('success', 'Your message has been sent successfully');
+        return to_route('contact')->with('success', 'Your message has been sent successfully');
     }
 
     // public function branch()
@@ -69,6 +69,14 @@ class PageController extends Controller
     //         'footer_info' => $footer
     //     ]);
     // }
+
+    public function locateStore()
+    {
+        $branches = Branch::where('status', 1)->get(['id', 'name', 'image', 'email', 'phone', 'address', 'location_url', 'description']);
+        return Inertia::render('LocateStore', [
+            'branches' => $branches
+        ]);
+    }
 
     public function contact(){
         return Inertia::render('ContactPage');

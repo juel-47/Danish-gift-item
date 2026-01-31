@@ -44,6 +44,7 @@ class ResetPasswordMail extends Mailable
             with: ([
                 'token' => $this->token,
                 'email' => $this->email,
+                'settings' => \App\Models\GeneralSetting::first(),
             ]),
         );
     }

@@ -460,42 +460,54 @@ class FrontendController extends Controller
     // Product Search
     public function productSearch(Request $request)
     {
-        $this->clearCache('search_products', $request);
+        $query = Product::active()
+            ->select([
+                'id', 'name', 'slug', 'price', 'qty', 'offer_price', 'offer_start_date', 'offer_end_date', 'thumb_image', 'category_id'
+            ]);
 
-        $cacheKey = $this->cacheKey('search_products', $request);
+        $query = $this->applyFilters($query, $request);
 
-        $products = Cache::remember($cacheKey, 1800, function () use ($request) {
-            $query = Product::active();
-            $query = $this->applyFilters($query, $request);
-
-            return $query->with([
-                'category:id,name,slug',
-                'colors:id,color_name,color_code,price,is_default',
-                'sizes:id,size_name,price,is_default',
-                'productImageGalleries:id,image,product_id,color_id',
-                'campaignProducts' => function($cq) {
-                    $cq->whereHas('campaign', function($ccq) {
-                        $ccq->where('status', 1)
-                            ->where('start_date', '<=', now())
-                            ->where('end_date', '>=', now());
-                    });
-                }
+        $products = $query->with(['category:id,name,slug'])
+            ->withCount([
+                'reviews' => fn($q) => $q->where('status', 1),
+                'colors' => fn($q) => $q->active(),
+                'sizes' => fn($q) => $q->active(),
+                'productImageGalleries' => fn($q) => $q->whereNotNull('color_id'),
             ])
-                ->withCount([
-                    'reviews' => fn($q) => $q->where('status', 1),
-                    'colors' => fn($q) => $q->active(),
-                    'sizes' => fn($q) => $q->active(),
-                    'productImageGalleries' => fn($q) => $q->whereNotNull('color_id'),
-                ])
-                ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
-                ->paginate(24)
-                ->withQueryString();
-        });
+            ->withAvg(['reviews' => fn($q) => $q->where('status', 1)], 'rating')
+            ->paginate(20)
+            ->withQueryString();
 
-        return Inertia::render('Frontend/Shop/SearchResults', [
-            'products' => $products,
-            'filters' => $request->all(),
-            'query' => $request->q ?? null
+        $categories = Category::active()->get(['id', 'name', 'slug']);
+        $brands = Brand::where('status', 1)->get(['id', 'name']);
+        $colors = Color::where('status', 1)->get(['id', 'color_name', 'color_code']);
+        $sizes = Size::where('status', 1)->get(['id', 'size_name']);
+
+        return Inertia::render('SearchPage', [
+            'products'   => $products,
+            'filters'    => $request->all(),
+            'categories' => $categories,
+            'brands'     => $brands,
+            'colors'     => $colors,
+            'sizes'      => $sizes,
+            'query'      => $request->q
         ]);
+    }
+
+    public function liveSearch(Request $request)
+    {
+        $keyword = $request->q;
+        if (!$keyword) return response()->json([]);
+
+        $products = Product::active()
+            ->where(function($q) use ($keyword) {
+                $q->where('name', 'like', "%{$keyword}%")
+                  ->orWhere('slug', 'like', "%{$keyword}%");
+            })
+            ->select('id', 'name', 'slug', 'price', 'offer_price', 'thumb_image')
+            ->take(8)
+            ->get();
+
+        return response()->json($products);
     }
 }

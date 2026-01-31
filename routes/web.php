@@ -82,6 +82,8 @@ Route::get('all-products', [FrontendController::class, 'allProducts'])->name('al
 Route::get('category/{slug}', [FrontendController::class, 'categoryProducts'])->name('category.products');
 Route::get('subcategory/{slug}', [FrontendController::class, 'subcategoryProducts'])->name('subcategory.products');
 Route::get('childcategory/{slug}', [FrontendController::class, 'childcategoryProducts'])->name('childcategory.products');
+Route::get('product-search', [FrontendController::class, 'productSearch'])->name('product.search');
+Route::get('api/live-search', [FrontendController::class, 'liveSearch'])->name('api.live.search');
 
 //cart controller 
 
@@ -126,6 +128,7 @@ Route::get('mobilepay/cancel', [PaymentController::class, 'mobilePayCancel'])->n
 Route::controller(PageController::class)->group(function () {
     Route::get('/about', 'about')->name('about');
     Route::get('/contact', 'contact')->name('contact');
+    Route::get('/locate-store', 'locateStore')->name('locate-store');
     Route::post('/contact', 'handleContactForm')->name('contact-form.submit');
 });
 //footer routes

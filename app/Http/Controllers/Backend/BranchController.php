@@ -6,10 +6,13 @@ use App\DataTables\BranchDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use Brian2694\Toastr\Facades\Toastr;
+use App\Traits\ImageUploadTrait;
 use Illuminate\Http\Request;
 
 class BranchController extends Controller
 {
+    use ImageUploadTrait;
+
     /**
      * Display a listing of the resource.
      */
@@ -32,13 +35,30 @@ class BranchController extends Controller
     public function store(Request $request)
     {
         // dd($request->all());
-        $validation = $request->validate([
+        $request->validate([
+            'image' => 'nullable|image|max:3000',
             'name' => 'required|max:256',
+            'email' => 'nullable|email|max:256',
+            'phone' => 'nullable|max:256',
+            'address' => 'nullable',
             'location_url' => 'required|url',
             'description' => 'required',
             'status' => 'required|boolean'
         ]);
-        Branch::create($validation);
+
+        $imagePath = $this->upload_image($request, 'image', 'uploads/branch');
+
+        $branch = new Branch();
+        $branch->image = $imagePath;
+        $branch->name = $request->name;
+        $branch->email = $request->email;
+        $branch->phone = $request->phone;
+        $branch->address = $request->address;
+        $branch->location_url = $request->location_url;
+        $branch->description = $request->description;
+        $branch->status = $request->status;
+        $branch->save();
+
         Toastr::success('Branch Created Successfully!');
         return redirect()->route('admin.branch.index');
     }
@@ -63,13 +83,29 @@ class BranchController extends Controller
     public function update(Request $request, string $id)
     {
         $branch = Branch::findOrFail($id);
-        $validated = $request->validate([
+        $request->validate([
+            'image' => 'nullable|image|max:3000',
             'name' => 'required|max:256|unique:branches,name,' . $branch->id,
+            'email' => 'nullable|email|max:256',
+            'phone' => 'nullable|max:256',
+            'address' => 'nullable',
             'location_url' => 'required|url',
             'description' => 'required',
             'status' => 'required|boolean'
         ]);
-        $branch->update($validated);
+
+        $imagePath = $this->update_image($request, 'image', 'uploads', $branch->image);
+
+        $branch->image = $imagePath;
+        $branch->name = $request->name;
+        $branch->email = $request->email;
+        $branch->phone = $request->phone;
+        $branch->address = $request->address;
+        $branch->location_url = $request->location_url;
+        $branch->description = $request->description;
+        $branch->status = $request->status;
+        $branch->save();
+
         Toastr::success('Branch Updated Successfully!');
         return redirect()->route('admin.branch.index');
     }
@@ -80,6 +116,7 @@ class BranchController extends Controller
     public function destroy(string $id)
     {
         $branch = Branch::findOrFail($id);
+        $this->delete_image($branch->image);
         $branch->delete();
         return response(['status' => 'success', 'message' => 'Delete Successfully!']);
     }

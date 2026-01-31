@@ -23,9 +23,21 @@
                             <form action="{{ route('admin.branch.store') }}" method="post" enctype="multipart/form-data">
                                 @csrf
                                 <div class="row">
+                                    <div class="form-group col-md-12">
+                                        <label>Image</label>
+                                        <input type="file" class="form-control" name="image">
+                                    </div>
                                     <div class="form-group col-md-6">
                                         <label>Name <code>*</code></label>
                                         <input type="text" class="form-control" name="name" value="{{ old('name') }}">
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Email</label>
+                                        <input type="email" class="form-control" name="email" value="{{ old('email') }}">
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Phone</label>
+                                        <input type="text" class="form-control" name="phone" value="{{ old('phone') }}">
                                     </div>
                                     <div class="form-group col-md-6">
                                         <label for="inputState">Status</label>
@@ -33,6 +45,10 @@
                                             <option value="1">Active</option>
                                             <option value="0">Inactive</option>
                                         </select>
+                                    </div>
+                                    <div class="form-group col-md-12">
+                                        <label>Address</label>
+                                        <textarea name="address" class="form-control">{{old('address')}}</textarea>
                                     </div>
                                     <div class="form-group col-md-12">
                                         <label>Location url <code>*</code> </label>

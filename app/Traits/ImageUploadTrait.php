@@ -50,19 +50,19 @@ trait ImageUploadTrait
     //     return null;
     // }
 
-    // public function deleteImage($path)
-    // {
-    //     if ($path) {
-    //         // Remove 'storage/' prefix if it's there (from accessor)
-    //         if (str_starts_with($path, 'storage/')) {
-    //             $path = substr($path, 8);
-    //         }
+    public function deleteImage($path)
+    {
+        if ($path) {
+            // Remove 'storage/' prefix if it's there (from accessor)
+            if (str_starts_with($path, 'storage/')) {
+                $path = substr($path, 8);
+            }
             
-    //         if (Storage::disk('public')->exists($path)) {
-    //             Storage::disk('public')->delete($path);
-    //         }
-    //     }
-    // }
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+        }
+    }
 
     // /** multiple image upload */
     // public function uploadMultiImage(Request $request, $inputName, $directory, $width = 400, $height = 500)
