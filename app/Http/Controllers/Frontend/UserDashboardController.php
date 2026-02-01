@@ -74,7 +74,7 @@ class UserDashboardController extends Controller
                 $request,
                 'image',
                 'uploads/user_profile_update',
-                $user->image
+                $user->getRawOriginal('image')
             );
         }
 
@@ -86,7 +86,7 @@ class UserDashboardController extends Controller
 
         $user->save();
 
-        return redirect()->route('user.profile')->with('Profile updated successfully');
+        return redirect()->route('user.profile')->with('success', 'Profile updated successfully');
     }
 
     public function updatePassword(Request $request)
@@ -101,6 +101,23 @@ class UserDashboardController extends Controller
             'password' => Hash::make($validated['new_password']),
         ]);
 
-        return redirect()->route('user.profile')->with('Password updated successfully');
+        return redirect()->route('user.profile')->with('success', 'Password updated successfully');
+    }
+
+    public function orderDetails($id)
+    {
+        $user = Auth::user();
+        $order = Order::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->with([
+                'orderProducts',
+                'orderStatus',
+                'transaction'
+            ])
+            ->firstOrFail();
+
+        return Inertia::render('OrderDetails', [
+            'order' => $order
+        ]);
     }
 }

@@ -19,6 +19,10 @@ class OrderProduct extends Model
         'front_image',
         'back_image',
     ];
+    
+    protected $casts = [
+        'variants' => 'object',
+    ];
     public function customer()
     {
         return $this->belongsTo(Customer::class);

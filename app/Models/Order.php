@@ -24,6 +24,12 @@ class Order extends Model
         'personal_info',
     ];
 
+    protected $casts = [
+        'order_address' => 'object',
+        'shipping_method' => 'object',
+        'coupon' => 'object',
+    ];
+
     public function orderStatus()
     {
         return $this->belongsTo(OrderStatus::class, 'order_status_id');

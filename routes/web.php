@@ -58,6 +58,7 @@ Route::middleware(['auth:customer', 'verified'])->group(function () {
     Route::put('/update-password', [UserDashboardController::class, 'updatePassword'])->name('update.password');
 
     Route::get('user-profile', [UserDashboardController::class, 'index'])->name('user.profile');
+    Route::get('/user/order/{id}', [UserDashboardController::class, 'orderDetails'])->name('user.order.details');
 
     // =====  Customer Address Controller  =====
     // Route::apiResource('customer-billing-address', CustomerAddressController::class)->only('index', 'store', 'update', 'destroy');
