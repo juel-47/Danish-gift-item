@@ -161,12 +161,20 @@ const Login = () => {
 
                 {/* Social buttons (placeholder) */}
                 <div className="grid grid-cols-2 gap-4 font-pop">
-                    <button className="w-full py-3 px-4 border border-gray rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium flex justify-center items-center gap-2">
+                    <a
+                        href={route('customer.social.login', 'google')}
+                        className="w-full py-3 px-4 border border-gray rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium flex justify-center items-center gap-2"
+                    >
+                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" />
                         Google
-                    </button>
-                    <button className="w-full py-3 px-4 border border-gray rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium flex justify-center items-center gap-2">
+                    </a>
+                    <a
+                        href={route('customer.social.login', 'facebook')}
+                        className="w-full py-3 px-4 border border-gray rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium flex justify-center items-center gap-2"
+                    >
+                         <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" className="w-5 h-5" alt="Facebook" />
                         Facebook
-                    </button>
+                    </a>
                 </div>
 
                 {/* Register link */}

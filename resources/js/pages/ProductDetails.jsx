@@ -233,8 +233,7 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
       <div className="container px-4 sm:px-6 lg:px-8 py-6 md:py-10">
         <Breadcrumb
           customItems={[
-            { name: "Danish Souvenirs", url: "/souvenirs" },
-            { name: "Apparel", url: "/souvenirs/apparel" },
+            { name: normalizedProduct.name },
           ]}
         />
 
@@ -535,7 +534,7 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
         <div className="mt-12 md:mt-16">
           <div className="border-b border-gray">
             <nav className="flex flex-wrap gap-6 md:gap-10">
-              {["description", "features", "specification", "shipping"].map(
+              {["description", "shipping"].map(
                 (tab) => (
                   <button
                     key={tab}
@@ -563,7 +562,7 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
               </div>
             )}
 
-            {activeTab === "features" && (
+            {/* {activeTab === "features" && (
               <ul className="grid md:grid-cols-2 gap-4">
                 {(normalizedProduct.features || []).map((feature, i) => (
                   <li key={i} className="flex items-start gap-3">
@@ -588,7 +587,7 @@ const ProductDetailsFull = ({ product, reviews = [], relatedProducts = [] }) => 
                   </div>
                 ))}
               </div>
-            )}
+            )} */}
 
             {activeTab === "shipping" && (
               <div className="space-y-4 text-gray-700">

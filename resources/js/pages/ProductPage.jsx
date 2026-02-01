@@ -153,10 +153,9 @@ const ProductPage = ({ products, filters, categories = [], brands = [], colors =
         {/* Breadcrumb */}
         <Breadcrumb
           customItems={[
-            { name: "Danish Souvenirs", url: "/souvenirs" },
-            { name: "Apparel", url: "/souvenirs/apparel" }, 
+            { name: "All Products" },
           ]}
-        /> 
+        />
 
         {/* ==================== FILTER & SORT BAR ==================== */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">

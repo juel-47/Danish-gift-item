@@ -43,6 +43,12 @@ Route::middleware('guest:customer')->group(function () {
         ->name('customers.verify');
 
     Route::post('/email/verification-resend', [AuthController::class, 'resendVerification'])->name('verification.resend');
+
+    // Social Login
+    Route::get('/customer/auth/{provider}', [App\Http\Controllers\Frontend\SocialAuthController::class, 'redirectToProvider'])
+        ->name('customer.social.login');
+    Route::get('/customer/auth/{provider}/callback', [App\Http\Controllers\Frontend\SocialAuthController::class, 'handleProviderCallback'])
+        ->name('customer.social.callback');
 });
 
 Route::middleware(['auth:customer', 'verified'])->group(function () {

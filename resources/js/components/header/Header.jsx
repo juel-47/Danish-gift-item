@@ -90,7 +90,7 @@ const Header = () => {
                                     </Link>
 
                                     {item.hasMegaMenu && (
-                                        <div className="absolute top-full left-0 z-50 w-[1100px] bg-white shadow-2xl border-t-2 border-red-600 rounded-b-lg grid grid-cols-12 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 overflow-hidden">
+                                        <div className="absolute top-full left-0 z-50 w-[930px] bg-white shadow-2xl border-t-2 border-red-600 rounded-b-lg grid grid-cols-12 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 overflow-hidden">
                                             {/* Column 1: Category Selection */}
                                             <div className="col-span-4 bg-gray-50 py-6 px-4 border-r border-gray-100">
                                                 <div className="space-y-1">
