@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Frontend\AuthController;
 use App\Http\Controllers\Frontend\BlogController;
+use App\Http\Controllers\Frontend\CampaignController;
 use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\Frontend\CheckOutController;
 use App\Http\Controllers\Frontend\FooterController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Frontend\PageController;
 use App\Http\Controllers\Frontend\PaymentController;
 use App\Http\Controllers\Frontend\ReviewController;
 use App\Http\Controllers\Frontend\UserDashboardController;
+use App\Http\Controllers\Frontend\SocialAuthController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Gate;
 
@@ -45,9 +47,9 @@ Route::middleware('guest:customer')->group(function () {
     Route::post('/email/verification-resend', [AuthController::class, 'resendVerification'])->name('verification.resend');
 
     // Social Login
-    Route::get('/customer/auth/{provider}', [App\Http\Controllers\Frontend\SocialAuthController::class, 'redirectToProvider'])
+    Route::get('/customer/auth/{provider}', [SocialAuthController::class, 'redirectToProvider'])
         ->name('customer.social.login');
-    Route::get('/customer/auth/{provider}/callback', [App\Http\Controllers\Frontend\SocialAuthController::class, 'handleProviderCallback'])
+    Route::get('/customer/auth/{provider}/callback', [SocialAuthController::class, 'handleProviderCallback'])
         ->name('customer.social.callback');
 });
 
@@ -153,9 +155,9 @@ Route::get('/blog', [BlogController::class, 'index'])->name('blog');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.details');
 
 //campaign routes
-Route::get('/campaign', [\App\Http\Controllers\Frontend\CampaignController::class, 'index'])->name('campaign.index');
-Route::get('/campaign-products', [\App\Http\Controllers\Frontend\CampaignController::class, 'allCampaignProducts'])->name('campaign.all-products');
-Route::get('/campaign/{slug}', [\App\Http\Controllers\Frontend\CampaignController::class, 'show'])->name('campaign.show');
+Route::get('/campaign', [CampaignController::class, 'index'])->name('campaign.index');
+Route::get('/campaign-products', [CampaignController::class, 'allCampaignProducts'])->name('campaign.all-products');
+Route::get('/campaign/{slug}', [CampaignController::class, 'show'])->name('campaign.show');
 
 //carrer routes
 Route::get('carrer', [JobApplicationController::class, 'carrer'])->name('carrer');
