@@ -120,6 +120,7 @@ const TopHeader = () => {
                   type="button"
                   onClick={() => {setQuery(""); setResults([]); setShowDropdown(false);}}
                   className="absolute right-14 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                  aria-label="Clear search"
                 >
                   <CloseIcon size={16} />
                 </button>
@@ -298,7 +299,7 @@ const TopHeader = () => {
                       onClick={() => {setShowDropdown(false); setMobileQuery("");}}
                       className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 border-b border-gray-50 last:border-0"
                     >
-                      <img src={product.thumb_image} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                      <img src={product.thumb_image} alt={product.name} className="w-10 h-10 rounded-lg object-cover" />
                       <div className="flex-1 min-w-0">
                         <h4 className="text-xs font-bold text-gray-900 truncate">{product.name}</h4>
                         <span className="text-red-600 font-bold text-xs">{settings?.currency_icon || 'DKK'}{product.offer_price || product.price}</span>

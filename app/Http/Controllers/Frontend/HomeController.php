@@ -14,23 +14,22 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $sliders = Cache::remember('sliders', 3600, function () {
+        $sliders = Cache::remember('home_sliders', 3600, function () {
             return Slider::active()
                 ->orderBy('serial', 'asc')
                 ->select('id', 'banner', 'title', 'btn_url', 'type')
                 ->get();
         });
 
-        $categories = Cache::remember('home_categories', 1800, function() {
+        $categories = Cache::remember('home_categories', 3600, function() {
             return $this->categories();
         });
 
-        // dd($categories);
-        $homeProducts = Cache::remember('home_products', 1800, function() {
+        $homeProducts = Cache::remember('home_products', 3600, function() {
             return $this->homeProducts();
         });
 
-        $typeBaseProducts = Cache::remember('type_base_products', 1800, function() {
+        $typeBaseProducts = Cache::remember('home_type_base_products', 3600, function() {
             return $this->getTypeBaseProduct();
         });
         return Inertia::render('Home',  [
@@ -75,7 +74,8 @@ class HomeController extends Controller
                         'qty'
                     )
                     ->with(['campaignProducts' => function($cq) {
-                        $cq->whereHas('campaign', function($ccq) {
+                        $cq->with('campaign')
+                           ->whereHas('campaign', function($ccq) {
                             $ccq->where('status', 1)
                                 ->where('start_date', '<=', now())
                                 ->where('end_date', '>=', now());
@@ -117,7 +117,8 @@ class HomeController extends Controller
                     'qty'
                 )
                 ->with(['campaignProducts' => function($cq) {
-                    $cq->whereHas('campaign', function($ccq) {
+                    $cq->with('campaign')
+                       ->whereHas('campaign', function($ccq) {
                         $ccq->where('status', 1)
                             ->where('start_date', '<=', now())
                             ->where('end_date', '>=', now());

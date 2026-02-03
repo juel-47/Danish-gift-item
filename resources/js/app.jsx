@@ -34,17 +34,19 @@ import Layout from "./pages/Layout";
 createInertiaApp({
     title: (title) => title ? `${title}` : 'Danish Gift',
     resolve: (name) => {
-        const pages = import.meta.glob("./pages/**/*.jsx", { eager: true });
-        let page = pages[`./pages/${name}.jsx`];
+        const pages = import.meta.glob("./pages/**/*.jsx");
+        const page = pages[`./pages/${name}.jsx`];
+        
+        if (!page) {
+             throw new Error(`Unknown page ${name}. Is it located under Pages with a .jsx extension?`);
+        }
 
-        // ✅ Layout wrapper (unchanged)
-        page.default.layout =
-            page.default.layout ||
-            ((pageElement, pageProps) => (
-                <Layout {...pageProps}>{pageElement}</Layout>
-            ));
-
-        return page;
+        return page().then(module => {
+            module.default.layout = module.default.layout || (
+                (pageElement, pageProps) => <Layout {...pageProps}>{pageElement}</Layout>
+            );
+            return module;
+        });
     },
 
     progress: {

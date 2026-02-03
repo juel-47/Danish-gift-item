@@ -18,7 +18,7 @@ const HomePage = ({sliders, categories, typeBaseProducts, homeProducts}) => {
             )}
             <div className="p-0 m-0 w-full bg-gray">
                 <Link to="/products">
-                    <img src="/banner.svg" alt="" className="w-full" />
+                    <img src="/banner.svg" alt="Shop Danish Souvenirs Banner" className="w-full" loading="lazy" />
                 </Link>
             </div>
              <LatestProducts products={homeProducts} />

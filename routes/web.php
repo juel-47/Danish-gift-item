@@ -16,6 +16,7 @@ use App\Http\Controllers\Frontend\UserDashboardController;
 use App\Http\Controllers\Frontend\SocialAuthController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
 
 
 // Welcome page
@@ -167,5 +168,10 @@ require __DIR__ . '/auth.php';
 
 Gate::before(function ($user, $ability) {
     return $user->hasRole('SuperAdmin') ? true : null;
+});
+
+// Fallback route for 404
+Route::fallback(function () {
+    return Inertia::render('NotFoundPage')->toResponse(request())->setStatusCode(404);
 });
 

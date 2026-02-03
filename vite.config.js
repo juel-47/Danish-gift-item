@@ -12,4 +12,25 @@ export default defineConfig({
         react(),
         tailwindcss(),
     ],
+    build: {
+        chunkSizeWarningLimit: 1000,
+        rollupOptions: {
+            output: {
+                manualChunks: (id) => {
+                    if (id.includes('node_modules')) {
+                        if (id.includes('react') || id.includes('react-dom')) {
+                            return 'vendor-react';
+                        }
+                        if (id.includes('swiper')) {
+                            return 'vendor-swiper';
+                        }
+                        if (id.includes('lucide')) {
+                            return 'vendor-icons';
+                        }
+                        return 'vendor'; // all other package goes here
+                    }
+                },
+            },
+        },
+    },
 });

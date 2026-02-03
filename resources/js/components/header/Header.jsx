@@ -82,6 +82,7 @@ const Header = () => {
                                 >
                                     <Link
                                         href={item.path || "#"}
+                                        prefetch
                                         className="flex items-center gap-2 text-gray-800 font-medium text-sm uppercase hover:text-red-600"
                                     >
                                         {item.icon && <item.icon size={18} />}
@@ -98,6 +99,7 @@ const Header = () => {
                                                         <Link
                                                             key={cat.slug}
                                                             href={`/category/${cat.slug}`}
+                                                            prefetch
                                                             className={`flex items-center justify-between py-3 px-4 rounded-md transition-all ${
                                                                 (activeCategory === cat.slug || (!activeCategory && item.categories[0].slug === cat.slug))
                                                                     ? "bg-white text-red-600 font-bold shadow-md translate-x-1"
@@ -135,7 +137,7 @@ const Header = () => {
                                                             {cur.items.map((sub, sIdx) => (
                                                                 <div key={sIdx} className="space-y-3">
                                                                     <div className="font-bold text-gray-900 uppercase text-xs tracking-wider border-b border-gray-100 pb-2">
-                                                                        <Link href={`/subcategory/${sub.slug}`} className="hover:text-red-600" onClick={() => setActiveCategory(null)}>
+                                                                        <Link href={`/subcategory/${sub.slug}`} prefetch className="hover:text-red-600" onClick={() => setActiveCategory(null)}>
                                                                             {sub.name}
                                                                         </Link>
                                                                     </div>
@@ -166,7 +168,11 @@ const Header = () => {
                     {/* Mobile Navigation */}
                     <div className="lg:hidden flex items-center justify-between h-14">
                         <div className="font-bold text-xl tracking-tight">MENU</div>
-                        <button onClick={() => setIsMobileOpen(!isMobileOpen)} className="p-2">
+                        <button 
+                            onClick={() => setIsMobileOpen(!isMobileOpen)} 
+                            className="p-2"
+                            aria-label={isMobileOpen ? "Close menu" : "Open menu"}
+                        >
                             {isMobileOpen ? <X size={24} /> : <Menu size={24} />}
                         </button>
                     </div>
@@ -181,7 +187,7 @@ const Header = () => {
                                     {item.hasMegaMenu ? (
                                         <div>
                                             <div className="flex items-center justify-between py-4 px-3 hover:bg-gray-50 rounded-md">
-                                                <Link href={item.path} className="flex items-center gap-3 flex-1" onClick={() => setIsMobileOpen(false)}>
+                                                <Link href={item.path} prefetch className="flex items-center gap-3 flex-1" onClick={() => setIsMobileOpen(false)}>
                                                     {item.icon && <item.icon size={20} />}
                                                     <span className="font-medium text-gray-800 uppercase">{item.label}</span>
                                                 </Link>
@@ -205,7 +211,7 @@ const Header = () => {
                                                                 <div className="bg-white pl-8 pr-4 py-2 space-y-4 shadow-inner">
                                                                     {cat.items.map((sub, sIdx) => (
                                                                         <div key={sIdx}>
-                                                                            <Link href={`/subcategory/${sub.slug}`} className="font-bold text-gray-800 text-sm" onClick={() => setIsMobileOpen(false)}>
+                                                                            <Link href={`/subcategory/${sub.slug}`} prefetch className="font-bold text-gray-800 text-sm" onClick={() => setIsMobileOpen(false)}>
                                                                                 {sub.name}
                                                                             </Link>
                                                                             <div className="flex flex-col mt-1 space-y-1">
@@ -225,7 +231,7 @@ const Header = () => {
                                             )}
                                         </div>
                                     ) : (
-                                        <Link href={item.path} className="flex items-center gap-3 py-4 px-3 text-gray-800 font-medium hover:bg-gray-50 rounded-md" onClick={() => setIsMobileOpen(false)}>
+                                        <Link href={item.path} prefetch className="flex items-center gap-3 py-4 px-3 text-gray-800 font-medium hover:bg-gray-50 rounded-md" onClick={() => setIsMobileOpen(false)}>
                                             {item.icon && <item.icon size={20} />}
                                             <span className="uppercase">{item.label}</span>
                                         </Link>

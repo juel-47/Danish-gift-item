@@ -34,6 +34,7 @@ const HeroSlider = ({sliders}) => {
         className="w-full"
       >
         {sliders && sliders.map((slide, index) => {
+          const isFirst = index === 0;
           return (
             <SwiperSlide key={index} className="h-full">
               <Link 
@@ -47,6 +48,9 @@ const HeroSlider = ({sliders}) => {
                     src={slide.banner.startsWith('http') ? slide.banner : (slide.banner.startsWith('storage/') ? `/${slide.banner}` : `/storage/${slide.banner}`)}
                     alt={slide.title || "Hero Banner"}
                     className="w-full h-full object-cover"
+                    fetchpriority={isFirst ? "high" : "auto"}
+                    loading={isFirst ? "eager" : "lazy"}
+                    decoding={isFirst ? "sync" : "async"}
                   />
                   <div className="absolute inset-0 bg-black/15" />
                 </div>

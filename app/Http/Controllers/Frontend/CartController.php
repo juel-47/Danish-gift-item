@@ -248,7 +248,14 @@ class CartController extends Controller
         return Cart::select('id', 'user_id', 'session_id', 'product_id', 'quantity', 'price', 'options')
             ->with(['product' => function ($query) {
                 // Ensure price and thumbnail are fetched from product as fallbacks
-                $query->select('id', 'name', 'slug', 'thumb_image', 'qty', 'category_id', 'price', 'offer_price');
+                $query->select('id', 'name', 'slug', 'thumb_image', 'qty', 'category_id', 'price', 'offer_price')
+                      ->with(['campaignProducts' => function($cq) {
+                        $cq->with('campaign')->whereHas('campaign', function($ccq) {
+                            $ccq->where('status', 1)
+                                ->where('start_date', '<=', now())
+                                ->where('end_date', '>=', now());
+                        });
+                    }]);
             }])
             ->where(fn($q) => $userId ? $q->where('user_id', $userId) : $q->where('session_id', $sessionId))
             ->get();

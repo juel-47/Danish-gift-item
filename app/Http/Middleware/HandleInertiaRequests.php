@@ -69,7 +69,7 @@ class HandleInertiaRequests extends Middleware
                     ->get()
                     ->map(fn($item) => $item->only(['icon', 'icon_extra', 'name', 'url', 'serial_no']))
             ),
-            'categoriess' => Cache::remember('shared_categories_tree', 1800, fn() => 
+            'categoriess' => Cache::remember('shared_categories_tree', 3600, fn() => 
                 Category::active()->frontShow()
                     ->with([
                         'subCategories' => function($q) {

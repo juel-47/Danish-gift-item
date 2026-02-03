@@ -23,9 +23,6 @@ export default function FeaturedProducts({products}) {
           {products.map((product, index) => (
             <ProductCard key={index} product={product} />
           ))}
-          {products.map((product, index) => (
-            <ProductCard key={index} product={product} />
-          ))}
         </div>
       </div>
     </section>

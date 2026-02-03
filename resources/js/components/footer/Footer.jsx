@@ -230,6 +230,14 @@ export default function Footer() {
                     Contact
                   </Link>
                 </li>
+                <li>
+                  <a
+                    href="https://b2bviking.com/"
+                    className="hover:text-white transition-colors" target="_blank"
+                  >
+                    Bussiness with us <br/> b2bviking
+                  </a>
+                </li>
               </ul>
             </div>
 
@@ -237,7 +245,7 @@ export default function Footer() {
             <div>
               <h4 className="text-lg font-semibold mb-5">Categories</h4>
               <ul className="space-y-2.5 text-red-100/90 text-sm">
-                {categoriess.map((category, index) => (
+                {(categoriess || []).map((category, index) => (
                   <li key={index}>
                     <Link href={route('category.products', category.slug)} className="hover:text-white transition-colors">
                       {category.name}

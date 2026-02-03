@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Product extends Model
 {
@@ -112,6 +113,21 @@ class Product extends Model
     public function getActiveCampaignProductAttribute()
     {
         $now = now();
+
+        // Check if relation is loaded to avoid N+1
+        if ($this->relationLoaded('campaignProducts')) {
+            return $this->campaignProducts->first(function ($item) use ($now) {
+                // If campaign relation is also loaded, verify it
+                if ($item->relationLoaded('campaign') && $item->campaign) {
+                    return $item->campaign->status == 1 &&
+                           $item->campaign->start_date <= $now &&
+                           $item->campaign->end_date >= $now;
+                }
+                // If campaign not loaded but filtered in query (like in HomeController), assume valid
+                return true; 
+            });
+        }
+
         return $this->campaignProducts()
             ->whereHas('campaign', function($query) use ($now) {
                 $query->where('status', 1)
@@ -142,5 +158,18 @@ class Product extends Model
         }
 
         return $this->price;
+    }
+
+    protected static function booted()
+    {
+        static::saved(function ($product) {
+            Cache::forget('home_products');
+            Cache::forget('home_type_base_products');
+        });
+
+        static::deleted(function ($product) {
+            Cache::forget('home_products');
+            Cache::forget('home_type_base_products');
+        });
     }
 }

@@ -27,7 +27,7 @@ class CampaignController extends Controller
             $featuredProducts = CampaignProduct::where('campaign_id', $featuredCampaign->id)
                 ->with(['product' => function($query) use ($now) {
                     $query->active()->withReview()->with(['campaignProducts' => function($cq) use ($now) {
-                        $cq->whereHas('campaign', function($ccq) use ($now) {
+                        $cq->with('campaign')->whereHas('campaign', function($ccq) use ($now) {
                             $ccq->where('status', 1)
                                 ->where('start_date', '<=', $now)
                                 ->where('end_date', '>=', $now);
@@ -55,7 +55,7 @@ class CampaignController extends Controller
             ->with(['product' => function($query) use ($campaign) {
                 $now = now();
                 $query->active()->withReview()->with(['campaignProducts' => function($cq) use ($now) {
-                    $cq->whereHas('campaign', function($ccq) use ($now) {
+                    $cq->with('campaign')->whereHas('campaign', function($ccq) use ($now) {
                         $ccq->where('status', 1)
                             ->where('start_date', '<=', $now)
                             ->where('end_date', '>=', $now);
@@ -101,7 +101,7 @@ class CampaignController extends Controller
         }
 
         $products = $query->with(['category:id,name', 'campaignProducts' => function($cq) use ($now) {
-                 $cq->whereHas('campaign', function($ccq) use ($now) {
+                 $cq->with('campaign')->whereHas('campaign', function($ccq) use ($now) {
                     $ccq->where('status', 1)
                         ->where('start_date', '<=', $now)
                         ->where('end_date', '>=', $now);

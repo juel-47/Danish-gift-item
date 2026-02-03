@@ -55,14 +55,16 @@ class Category extends Model
     protected static function booted()
     {
         static::saved(function ($category) {
-            Cache::forget('categories');
+            Cache::forget('home_categories');
             Cache::forget('home_products');
+            Cache::forget('home_type_base_products');
             Cache::forget('shared_categories_tree');
         });
 
         static::deleted(function ($category) {
-            Cache::forget('categories');
+            Cache::forget('home_categories');
             Cache::forget('home_products');
+            Cache::forget('home_type_base_products');
             Cache::forget('shared_categories_tree');
         });
     }

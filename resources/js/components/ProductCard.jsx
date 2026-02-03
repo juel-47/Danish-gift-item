@@ -64,7 +64,7 @@ const ProductCard = ({ product, onImageLoad, forceLoading = false }) => {
               `} >
       {/* Product Image */}
       <div className="aspect-square relative bg-gray-100 overflow-hidden flex items-center justify-center">
-        <Link href={`/product-details/${product.slug}`} className="w-full h-full flex items-center justify-center">
+        <Link href={`/product-details/${product.slug}`} prefetch className="w-full h-full flex items-center justify-center">
           {product.thumb_image && !imageError ? (
             <>
               {isImageLoading && (
@@ -83,6 +83,7 @@ const ProductCard = ({ product, onImageLoad, forceLoading = false }) => {
                    if (onImageLoad) onImageLoad();
                 }}
                 className={`max-h-full max-w-full object-contain group-hover:scale-105 transition-all duration-500 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
+                loading="lazy"
               />
             </>
           ) : (
@@ -100,7 +101,7 @@ const ProductCard = ({ product, onImageLoad, forceLoading = false }) => {
 
       {/* Content */}
       <div className="p-3 sm:p-4 text-start">
-        <Link href={`/product-details/${product.slug}`}>
+        <Link href={`/product-details/${product.slug}`} prefetch>
           <h3 className="text-xs sm:text-sm font-medium text-gray-700 min-h-10 line-clamp-2">
             {product.name}
           </h3>
@@ -142,6 +143,7 @@ const ProductCard = ({ product, onImageLoad, forceLoading = false }) => {
           {hasVariants ? (
             <Link
               href={`/product-details/${product.slug}`}
+              prefetch
               className="
                         w-full bg-gray-800 text-white 
                         py-2 px-4 rounded-lg text-sm font-medium
@@ -182,6 +184,7 @@ const ProductCard = ({ product, onImageLoad, forceLoading = false }) => {
 
           <Link
             href={`/product-details/${product.slug}`}
+            prefetch
             className="
                       w-full bg-white text-gray-800 border border-gray-400
                       py-2 px-4 rounded-lg text-sm font-medium

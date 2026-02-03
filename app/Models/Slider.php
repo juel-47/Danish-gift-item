@@ -31,16 +31,12 @@ class Slider extends Model
     }
     protected static function booted()
     {
-        static::created(function ($slider) {
-            Cache::forget('sliders');
-        });
-
-        static::updated(function ($slider) {
-            Cache::forget('sliders');
+        static::saved(function ($slider) {
+            Cache::forget('home_sliders');
         });
 
         static::deleted(function ($slider) {
-            Cache::forget('sliders');
+            Cache::forget('home_sliders');
         });
     }
 }

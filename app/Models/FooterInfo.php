@@ -25,19 +25,12 @@ class FooterInfo extends Model
 
     protected static function booted()
     {
-        $refreshCache = function () {
-            Cache::forget('footer_data');
-            Cache::remember('footer_data', 3600, function () {
-                return FooterInfo::select('logo', 'phone', 'email', 'address', 'copyright')
-                    ->get()
-                    ->map(function ($item) {
-                        return $item->only(['logo', 'phone', 'email', 'address', 'copyright']);
-                    })->first();
-            });
-        };
+        static::saved(function ($footerInfo) {
+            Cache::forget('shared_footer_info');
+        });
 
-        static::created($refreshCache);
-        static::updated($refreshCache);
-        static::deleted($refreshCache);
+        static::deleted(function ($footerInfo) {
+            Cache::forget('shared_footer_info');
+        });
     }
 }

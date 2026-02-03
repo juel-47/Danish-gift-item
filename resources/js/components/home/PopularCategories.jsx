@@ -71,6 +71,7 @@ export default function PopularCategories({categories}) {
                         alt={item.name}
                         onError={() => handleImageError(item.id)}
                         className="w-47 h-full object-contain scale-50 group-hover:scale-75 transition-transform duration-500"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="w-full h-full bg-gray-100 animate-pulse flex items-center justify-center">

@@ -118,7 +118,8 @@ class FrontendController extends Controller
                 'child_category_id'
             ])
             ->with(['campaignProducts' => function($cq) {
-                $cq->whereHas('campaign', function($ccq) {
+                $cq->with('campaign')
+                   ->whereHas('campaign', function($ccq) {
                     $ccq->where('status', 1)
                         ->where('start_date', '<=', now())
                         ->where('end_date', '>=', now());
@@ -184,7 +185,8 @@ class FrontendController extends Controller
                 'child_category_id'
             ])
             ->with(['campaignProducts' => function($cq) {
-                $cq->whereHas('campaign', function($ccq) {
+                $cq->with('campaign')
+                   ->whereHas('campaign', function($ccq) {
                     $ccq->where('status', 1)
                         ->where('start_date', '<=', now())
                         ->where('end_date', '>=', now());
@@ -249,7 +251,8 @@ class FrontendController extends Controller
                 'child_category_id'
             ])
             ->with(['campaignProducts' => function($cq) {
-                $cq->whereHas('campaign', function($ccq) {
+                $cq->with('campaign')
+                   ->whereHas('campaign', function($ccq) {
                     $ccq->where('status', 1)
                         ->where('start_date', '<=', now())
                         ->where('end_date', '>=', now());
@@ -314,7 +317,8 @@ class FrontendController extends Controller
                 'child_category_id'
             ])
             ->with(['campaignProducts' => function($cq) {
-                $cq->whereHas('campaign', function($ccq) {
+                $cq->with('campaign')
+                   ->whereHas('campaign', function($ccq) {
                     $ccq->where('status', 1)
                         ->where('start_date', '<=', now())
                         ->where('end_date', '>=', now());
@@ -385,7 +389,8 @@ class FrontendController extends Controller
                     $q->where('status', 1);
                 })
                 ->with(['campaignProducts' => function($cq) {
-                    $cq->whereHas('campaign', function($ccq) {
+                    $cq->with('campaign')
+                       ->whereHas('campaign', function($ccq) {
                         $ccq->where('status', 1)
                             ->where('start_date', '<=', now())
                             ->where('end_date', '>=', now());
@@ -436,7 +441,8 @@ class FrontendController extends Controller
             ->where('id', '!=', $product->id)
             ->take(6)
             ->with(['category:id,name', 'productImageGalleries', 'campaignProducts' => function($cq) {
-                $cq->whereHas('campaign', function($ccq) {
+                $cq->with('campaign')
+                   ->whereHas('campaign', function($ccq) {
                     $ccq->where('status', 1)
                         ->where('start_date', '<=', now())
                         ->where('end_date', '>=', now());
@@ -463,11 +469,26 @@ class FrontendController extends Controller
         $query = Product::active()
             ->select([
                 'id', 'name', 'slug', 'price', 'qty', 'offer_price', 'offer_start_date', 'offer_end_date', 'thumb_image', 'category_id'
-            ]);
+            ])
+            ->with(['campaignProducts' => function($cq) {
+                $cq->with('campaign')
+                   ->whereHas('campaign', function($ccq) {
+                    $ccq->where('status', 1)
+                        ->where('start_date', '<=', now())
+                        ->where('end_date', '>=', now());
+                });
+            }]);
 
         $query = $this->applyFilters($query, $request);
 
-        $products = $query->with(['category:id,name,slug'])
+        $products = $query->with(['category:id,name,slug', 'campaignProducts' => function($cq) {
+            $cq->with('campaign')
+               ->whereHas('campaign', function($ccq) {
+                $ccq->where('status', 1)
+                    ->where('start_date', '<=', now())
+                    ->where('end_date', '>=', now());
+            });
+        }])
             ->withCount([
                 'reviews' => fn($q) => $q->where('status', 1),
                 'colors' => fn($q) => $q->active(),

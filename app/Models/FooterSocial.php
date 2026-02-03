@@ -11,19 +11,12 @@ class FooterSocial extends Model
 
     protected static function booted()
     {
-        $refreshCache = function () {
-            Cache::forget('footer_social');
-            Cache::remember('footer_social', 3600, function () {
-                return FooterSocial::where('status', 1)->select('icon', 'icon_extra', 'name', 'url', 'serial_no')
-                    ->get()
-                    ->map(function ($item) {
-                        return $item->only(['icon', 'icon_extra', 'name', 'url', 'serial_no']);
-                    });
-            });
-        };
+        static::saved(function ($footerSocial) {
+            Cache::forget('shared_footer_social');
+        });
 
-        static::created($refreshCache);
-        static::updated($refreshCache);
-        static::deleted($refreshCache);
+        static::deleted(function ($footerSocial) {
+            Cache::forget('shared_footer_social');
+        });
     }
 }

@@ -29,15 +29,12 @@ class LogoSetting extends Model
 
     protected static function booted()
     {
-        $refreshCache = function () {
-            Cache::forget('logo_fav');
-            Cache::remember('logo_fav', 3600, function () {
-                return LogoSetting::first();
-            });
-        };
+        static::saved(function ($logoSetting) {
+            Cache::forget('shared_logos');
+        });
 
-        static::created($refreshCache);
-        static::updated($refreshCache);
-        static::deleted($refreshCache);
+        static::deleted(function ($logoSetting) {
+            Cache::forget('shared_logos');
+        });
     }
 }
