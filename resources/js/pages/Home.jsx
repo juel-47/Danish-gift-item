@@ -16,11 +16,11 @@ const HomePage = ({sliders, categories, typeBaseProducts, homeProducts}) => {
                     products={typeBaseProducts?.featured_product}
                 />
             )}
-            <div className="p-0 m-0 w-full bg-gray">
+            {/* <div className="p-0 m-0 w-full bg-gray">
                 <Link to="/products">
                     <img src="/banner.svg" alt="Shop Danish Souvenirs Banner" className="w-full" loading="lazy" />
                 </Link>
-            </div>
+            </div> */}
              <LatestProducts products={homeProducts} />
             {/* <CustomerStories /> */}
         </>
