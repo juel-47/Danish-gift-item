@@ -1,245 +1,116 @@
-{{-- <x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
-    </div>
-
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
-
-    <form method="POST" action="{{ route('password.email') }}">
-        @csrf
-
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Email Password Reset Link') }}
-            </x-primary-button>
-        </div>
-    </form>
-</x-guest-layout> --}}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forgot Password - {{$settings->site_name}}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <title>Forgot Password - {{ config('app.name', 'Laravel') }}</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Scripts -->
+    @vite(['resources/css/app.css', 'resources/js/app.jsx'])
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
+        body { font-family: 'Outfit', sans-serif; }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-        
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-        }
-        
-        .input-group {
-            position: relative;
-            margin-bottom: 1.5rem;
-        }
-        
-        .input-group input:focus + label,
-        .input-group input:not(:placeholder-shown) + label {
-            transform: translateY(-25px) scale(0.85);
-            color: #667eea;
-            background-color: white;
-            padding: 0 4px;
-            left: 8px; /* Adjusted when label moves up */
-        }
-        
-        .floating-label {
+        .blob {
             position: absolute;
-            pointer-events: none;
-            left: 40px; /* Adjusted to account for icon */
-            top: 12px;
-            transition: 0.2s ease all;
-            color: #9ca3af;
-            z-index: 1;
-        }
-        
-        .input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-        
-        .email-icon {
-            position: absolute;
-            left: 12px;
-            z-index: 2; /* Higher z-index to ensure it's always visible */
-            color: #9ca3af;
-            pointer-events: none;
-            transition: color 0.2s ease;
-        }
-        
-        .input-wrapper:focus-within .email-icon {
-            color: #667eea; /* Change color when input is focused */
-        }
-        
-        .email-input {
-            padding-left: 40px;
-            width: 100%;
-        }
-        
-        .submit-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            transition: all 0.3s ease;
-        }
-        
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
-        }
-        
-        .shape {
-            position: absolute;
+            filter: blur(80px);
             z-index: -1;
+            opacity: 0.35;
+            animation: float 20s infinite alternate ease-in-out;
         }
-        
-        .shape-1 {
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-            top: -150px;
-            right: -100px;
-            opacity: 0.7;
-        }
-        
-        .shape-2 {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            bottom: -100px;
-            left: -50px;
-            opacity: 0.7;
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .error-shake {
-            animation: shake 0.5s;
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
-        
-        .custom-input {
-            outline: none !important;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-        }
-        
-        .custom-input:focus {
-            outline: none !important;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(60px, 80px) scale(1.15); }
         }
     </style>
 </head>
-<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
-    <!-- Background Shapes -->
-    <div class="shape shape-1"></div>
-    <div class="shape shape-2"></div>
+<body class="h-full bg-[#030712] text-slate-300 overflow-x-hidden relative selection:bg-indigo-500/40 selection:text-white">
+
+    <!-- Background Layer -->
+    <div class="fixed inset-0 bg-[#030712] z-[-2]"></div>
     
-    <!-- Forgot Password Container -->
-    <div class="glass-effect rounded-2xl shadow-2xl w-full max-w-md p-8 fade-in">
-        <!-- Logo and Title -->
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full mb-4">
-                <i class="fas fa-key text-white text-2xl"></i>
-            </div>
-            <h1 class="text-3xl font-bold text-gray-800">Forgot Password?</h1>
-        </div>
+    <!-- Animated Blobs -->
+    <div class="blob bg-indigo-600/20 w-[600px] h-[600px] rounded-full -top-64 -left-32"></div>
+    <div class="blob bg-purple-600/10 w-[500px] h-[500px] rounded-full bottom-0 right-0 translate-x-1/4 translate-y-1/4" style="animation-delay: -7s;"></div>
+
+    <div class="min-h-screen flex flex-col items-center justify-center p-6 sm:p-12">
         
-        <!-- Description Message -->
-        <div class="mb-6 text-sm text-gray-600 leading-relaxed">
-            {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
-        </div>
-        
-        <!-- Session Status -->
-        @if(session('status'))
-            <div class="mb-4 p-3 bg-green-100 text-green-700 rounded-lg text-sm font-medium fade-in">
-                {{ session('status') }}
-            </div>
-        @endif
-        
-        <!-- Forgot Password Form -->
-        <form method="POST" action="{{ route('password.email') }}">
-            @csrf
-            
-            <!-- Email Address -->
-            <div class="input-group">
-                <div class="input-wrapper">
-                    <input 
-                        id="email" 
-                        class="custom-input email-input block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200" 
-                        type="email" 
-                        name="email" 
-                        placeholder=" " 
-                        value="{{ old('email') }}" 
-                        required 
-                        autofocus 
-                        autocomplete="email" 
-                    />
-                    <label for="email" class="floating-label">{{ __('Email') }}</label>
+        <!-- Header -->
+        <div class="mb-12 text-center">
+            <a href="/" class="inline-flex flex-col items-center gap-5 group">
+                <div class="w-20 h-20 rounded-3xl bg-linear-to-br from-indigo-500 via-indigo-600 to-purple-600 flex items-center justify-center shadow-indigo-500/20 shadow-2xl group-hover:scale-105 transition-all duration-700 border border-white/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-11 h-11 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11.536 16.222a1 1 0 01-.293.707l-2.828 2.828a1 1 0 01-1.414 0l-1.414-1.414a1 1 0 010-1.414l6.364-6.364A6 6 0 0121 9z" />
+                    </svg>
                 </div>
-                @if ($errors->has('email'))
-                    <div class="mt-2 p-2 bg-red-100 text-red-700 rounded text-sm font-medium error-shake">
-                        {{ $errors->first('email') }}
-                    </div>
-                @endif
-            </div>
-            
-            <!-- Submit Button -->
-            <div class="flex items-center justify-end mt-4">
-                <button type="submit" class="submit-btn flex justify-center py-3 px-6 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    <span class="mr-2">{{ __('Email Password Reset Link') }}</span>
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-        </form>
-        
-        <!-- Back to Login -->
-        <div class="mt-6 text-center">
-            <p class="text-sm text-gray-600">
-                {{ __('Remember your password?') }}
-                <a href="{{ route('admin.login') }}" class="font-medium text-indigo-600 hover:text-indigo-800 transition duration-200">
-                    {{ __('Back to login') }}
-                </a>
-            </p>
+                <h1 class="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-linear-to-b from-white to-slate-500 uppercase">
+                    Recovery
+                </h1>
+            </a>
+            <p class="mt-4 text-slate-500 text-sm max-w-sm mx-auto leading-relaxed font-medium">Forgot your password? Enter your email and we'll help you get back in.</p>
         </div>
+
+        <!-- Card -->
+        <div class="w-full max-w-md glass-card rounded-[2.5rem] p-10 relative overflow-hidden">
+            
+            <x-auth-session-status class="mb-6 text-center text-emerald-400 text-sm font-bold" :status="session('status')" />
+
+            <form method="POST" action="{{ route('password.email') }}" class="space-y-8 relative z-10">
+                @csrf
+
+                <div class="space-y-3">
+                    <label for="email" class="text-xs font-bold uppercase tracking-[0.15em] text-slate-500 ml-1">Email Address</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-500 group-focus-within:text-indigo-400 transition-colors">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" />
+                            </svg>
+                        </div>
+                        <input id="email" type="email" name="email" :value="old('email')" required autofocus
+                            class="w-full pl-14 pr-6 py-5 bg-slate-900/60 border border-slate-800 text-white rounded-[1.25rem] focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/40 placeholder-slate-700 transition-all outline-none"
+                            placeholder="name@example.com">
+                    </div>
+                    @if ($errors->has('email'))
+                        <p class="text-rose-500 text-[11px] font-bold mt-2 ml-1">{{ $errors->first('email') }}</p>
+                    @endif
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" class="w-full flex justify-center py-5 px-4 border border-indigo-500/10 text-sm font-black rounded-[1.25rem] text-white bg-indigo-600 hover:bg-indigo-500 transition-all duration-300 shadow-indigo-600/30 shadow-2xl hover:-translate-y-1 active:translate-y-0">
+                        Email Reset Link
+                    </button>
+                </div>
+
+                <div class="mt-12 text-center pt-8 border-t border-slate-800/50">
+                    <a href="{{ route('login') }}" class="flex items-center justify-center text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors gap-3 group/back uppercase tracking-[0.1em]">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform group-hover/back:-translate-x-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back to Login
+                    </a>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="mt-16 text-center">
+            <p class="text-slate-700 text-[10px] font-black tracking-[0.3em] uppercase opacity-60">
+                &copy; {{ date('Y') }} {{ config('app.name') }} &bull; All Rights Reserved
+            </p>
+        </footer>
     </div>
 </body>
 </html>

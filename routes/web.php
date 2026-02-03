@@ -32,8 +32,8 @@ Route::middleware('guest:customer')->group(function () {
     Route::get('/customer/login', [AuthController::class, 'showLogin'])->name('customer.login');
     Route::post('/customer-login', [AuthController::class, 'login'])->name('customer.login.submit');
 
-    Route::get('/customer/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
-    Route::post('/customer/forgot-password', [AuthController::class, 'forgotPassword'])->name('password.email');
+    Route::get('/customer/forgot-password', [AuthController::class, 'showForgotPassword'])->name('customer.password.request');
+    Route::post('/customer/forgot-password', [AuthController::class, 'forgotPassword'])->name('customer.password.email');
 
     Route::get('/customer/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('customer.password.reset');
     Route::post('/customer/reset-password', [AuthController::class, 'resetPassword'])->name('customer.password.update');
